@@ -24,6 +24,25 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
+function resolveProjectImages(project: Project): Project {
+  if (!API_BASE_URL) return project;
+  const baseHost = API_BASE_URL.replace(/\/api\/?$/, '');
+  const resolve = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `${baseHost}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
+  return {
+    ...project,
+    main_image_url: resolve(project.main_image_url),
+    gallery: project.gallery?.map((img) => ({
+      ...img,
+      image_url: resolve(img.image_url),
+    })) || [],
+  };
+}
+
 /**
  * Fetch all architectural projects or filter by category slug
  */
@@ -41,7 +60,7 @@ export async function getProjects(categorySlug?: string): Promise<Project[]> {
       if (res.ok) {
         const json: ApiResponse<Project[]> = await res.json();
         if (json.success && Array.isArray(json.data)) {
-          return json.data;
+          return json.data.map(resolveProjectImages);
         }
       }
     } catch (err) {
@@ -70,7 +89,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
       if (res.ok) {
         const json: ApiResponse<Project> = await res.json();
         if (json.success && json.data) {
-          return json.data;
+          return resolveProjectImages(json.data);
         }
       }
     } catch (err) {

@@ -17,7 +17,15 @@ Options -Indexes -MultiViews
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # --------------------------------------------------------------------------
-    # 2. Subdirectory Bypass: /api/, /admin/, and /uploads/
+    # 2. Subdomain Vanity Routes (for admin.websitename.com)
+    # --------------------------------------------------------------------------
+    RewriteRule ^login/?$ admin/login.php [L,QSA]
+    RewriteRule ^logout/?$ admin/logout.php [L,QSA]
+    RewriteRule ^project-edit/?$ admin/project-edit.php [L,QSA]
+    RewriteRule ^dashboard/?$ admin/index.php [L,QSA]
+
+    # --------------------------------------------------------------------------
+    # 3. Subdirectory Bypass: /api/, /admin/, and /uploads/
     # Completely pass through to native Apache / PHP execution without rewriting
     # --------------------------------------------------------------------------
     RewriteRule ^(api|admin|uploads)($|/) - [L]

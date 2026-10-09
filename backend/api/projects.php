@@ -14,6 +14,17 @@ require_once __DIR__ . '/config/database.php';
 
 $db = Database::getConnection();
 
+/**
+ * Ensure image paths starting with /uploads/ are fully qualified with the host domain
+ */
+function resolveAssetUrl(?string $url): string {
+    if (empty($url)) return '';
+    if (preg_match('/^https?:\/\//i', $url)) return $url;
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    return rtrim($scheme . $host, '/') . '/' . ltrim($url, '/');
+}
+
 // 1. Single Project Detail by Slug
 if (!empty($_GET['slug'])) {
     $slug = trim($_GET['slug']);
@@ -87,7 +98,7 @@ if (!empty($_GET['slug'])) {
         'client_name'       => $project['client_name'],
         'description'       => $project['description'],
         'concept_narrative' => $project['concept_narrative'],
-        'main_image_url'    => $project['main_image_url'],
+        'main_image_url'    => resolveAssetUrl($project['main_image_url']),
         'location'          => $project['location'],
         'completion_year'   => (int)$project['completion_year'],
         'is_featured'       => (bool)$project['is_featured'],
@@ -98,7 +109,10 @@ if (!empty($_GET['slug'])) {
             'scope'      => $project['scope'] ?: 'Architecture & Build'
         ],
         'category'          => $categoryData,
-        'gallery'           => $gallery,
+        'gallery'           => array_map(function ($img) {
+            $img['image_url'] = resolveAssetUrl($img['image_url']);
+            return $img;
+        }, $gallery),
         'created_at'        => $project['created_at']
     ];
 
@@ -170,7 +184,7 @@ $formattedProjects = array_map(function ($row) {
         'category_id'     => (int)$row['category_id'],
         'client_name'     => $row['client_name'],
         'description'     => $row['description'],
-        'main_image_url'  => $row['main_image_url'],
+        'main_image_url'  => resolveAssetUrl($row['main_image_url']),
         'location'        => $row['location'],
         'completion_year' => (int)$row['completion_year'],
         'is_featured'     => (bool)$row['is_featured'],
