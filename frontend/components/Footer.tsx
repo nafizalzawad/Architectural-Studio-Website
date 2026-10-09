@@ -2,13 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
-
+import { usePathname } from 'next/navigation';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
+  // Reference site has edge-to-edge fullscreen canvas on homepage without footer
+  if (pathname === '/') return null;
+
   return (
-    <footer className="w-full bg-[#08080a] text-neutral-300 border-t border-white/10 font-sans">
+    <footer className="w-full bg-[#141416] text-neutral-300 border-t border-white/10 font-sans">
       <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-20 pb-12">
         {/* Top Section: Architectural Studio Ethos & Brand Identity */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-16 border-b border-white/10">
