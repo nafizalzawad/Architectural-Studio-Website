@@ -34,13 +34,15 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled && !isOpen
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 pointer-events-none ${
+        isHomepage
+          ? 'bg-transparent py-8 sm:py-10'
+          : isScrolled && !isOpen
           ? 'bg-[#1b1b1e]/90 backdrop-blur-md border-b border-white/10 py-5 shadow-lg'
           : 'bg-transparent py-7 sm:py-9'
       }`}
     >
-      <div className="w-full px-8 sm:px-12 lg:px-16 flex items-center justify-between">
+      <div className="w-full px-8 sm:px-14 lg:px-20 flex items-center justify-between pointer-events-auto">
         {/* Left: Authentic Minale + Mann Geometric Vector Monogram */}
         <Link
           href="/"
