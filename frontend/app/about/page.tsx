@@ -77,7 +77,7 @@ const ACCREDITATIONS = [
 
 export default function AboutPage() {
   return (
-    <div className="w-full bg-[#0c0d0e] text-white">
+    <div className="w-full bg-[#1b1b1e] text-white">
       {/* 1. Header & Philosophy Statement */}
       <section className="pt-8 sm:pt-14 pb-16 px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full border-b border-white/10">
         <span className="text-[11px] font-mono uppercase tracking-[0.35em] text-neutral-500 block mb-3">

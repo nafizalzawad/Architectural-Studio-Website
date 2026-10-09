@@ -3,15 +3,23 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getProjects, getProjectBySlug } from '@/lib/api';
 import { getNextProject } from '@/lib/data';
+import BlueprintBrief from '@/components/case-study/BlueprintBrief';
+import AsymmetricImages from '@/components/case-study/AsymmetricImages';
+import InvertedSection from '@/components/case-study/InvertedSection';
+import PinnedTextSection from '@/components/case-study/PinnedTextSection';
+import BlueprintMagnifier from '@/components/case-study/BlueprintMagnifier';
+import AwardBadgeSection from '@/components/case-study/AwardBadgeSection';
+import ProjectInquiryForm from '@/components/case-study/ProjectInquiryForm';
+import ExpandingCtaBanner from '@/components/case-study/ExpandingCtaBanner';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 60; // Revalidate stale data every 60 seconds
+export const revalidate = 60; // ISR revalidation
 
 export async function generateStaticParams() {
   const projects = await getProjects();
@@ -31,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${project.title} | Minale + Mann Architects`,
+    title: `${project.title} | Minale + Mann Architects London`,
     description: project.description,
   };
 }
@@ -46,10 +54,32 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
 
   const nextProject = getNextProject(project.slug);
 
+  // Split gallery images for the editorial sections
+  const firstImage = project.gallery[0] || {
+    image_url: project.main_image_url,
+    caption: 'Facade elevation',
+  };
+  const secondImage = project.gallery[1] || {
+    image_url: project.main_image_url,
+    caption: 'Interior daylight void',
+  };
+  const pinnedImages = project.gallery.slice(2, 5).map((img) => ({
+    url: img.image_url,
+    caption: img.caption,
+  }));
+
+  // Fallback pinned images if gallery is short
+  if (pinnedImages.length === 0) {
+    pinnedImages.push({
+      url: project.main_image_url,
+      caption: 'Detailed materiality and custom joinery',
+    });
+  }
+
   return (
-    <article className="w-full bg-[#0c0d0e] text-white">
-      {/* 1. Header & Breadcrumb Bar */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-6 pb-8">
+    <article className="w-full bg-[#1b1b1e] text-white">
+      {/* 1. Header & Navigation Breadcrumb Bar */}
+      <div className="max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 pt-8 pb-6 flex items-center justify-between">
         <Link
           href="/portfolio"
           className="group inline-flex items-center gap-2.5 text-xs font-mono uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors"
@@ -57,35 +87,38 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
           <span>Back to Portfolio</span>
         </Link>
+        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500">
+          Case Study // {project.specs.sector}
+        </span>
       </div>
 
-      {/* 2. Hero Photograph & Title Banner */}
+      {/* 2. Full-Bleed Hero Photograph & Volumetric Title */}
       <section className="w-full px-4 sm:px-8 lg:px-16 max-w-[1720px] mx-auto">
-        <div className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[2.4/1] w-full overflow-hidden bg-neutral-900 border border-white/10">
+        <div className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[2.4/1] w-full overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl">
           <Image
             src={project.main_image_url}
             alt={project.title}
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center filter grayscale-[25%] contrast-[1.05]"
+            className="object-cover object-center filter contrast-[1.05]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0d0e] via-black/30 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30" />
 
-          {/* Floating Case Title */}
-          <div className="absolute bottom-6 sm:bottom-12 left-6 sm:left-12 right-6 sm:right-12">
-            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.35em] text-neutral-300 block mb-2 sm:mb-3">
-              Case Study // {project.specs.sector}
+          {/* Floating Title HUD */}
+          <div className="absolute bottom-6 sm:bottom-12 left-6 sm:left-12 right-6 sm:right-12 space-y-2">
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.35em] text-neutral-300 block">
+              {project.specs.location}
             </span>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight uppercase text-white leading-tight max-w-4xl">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light uppercase tracking-tight text-white leading-none max-w-5xl">
               {project.title}
             </h1>
           </div>
         </div>
       </section>
 
-      {/* 3. Structured Specs Matrix Bar */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16">
+      {/* 3. Dimensional Specifications Bar */}
+      <section className="max-w-[1720px] mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-8 border-y border-white/10 text-neutral-300">
           <div>
             <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-500 block mb-2">
@@ -125,151 +158,76 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* 4. Narrative Concept Statement */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pb-16 sm:pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-          <div className="lg:col-span-4">
-            <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-500 block mb-3">
-              Architectural Concept
-            </span>
-            <h2 className="text-xl sm:text-2xl font-light uppercase tracking-wide text-neutral-200">
-              Purity of form and material permanence.
-            </h2>
-          </div>
+      {/* 4. Blueprint Schematic & Design Brief Section */}
+      <BlueprintBrief
+        specs={project.specs}
+        conceptTitle="Design Brief"
+        conceptNarrative={
+          project.concept_narrative ||
+          project.description ||
+          `${project.title} was designed and built by Minale + Mann, embracing volume, depth, and light as primary architectural tenets.`
+        }
+      />
 
-          <div className="lg:col-span-8 space-y-6 text-sm sm:text-base font-light text-neutral-300 leading-relaxed">
-            <p className="text-lg sm:text-xl font-light text-white leading-relaxed">
-              {project.description}
-            </p>
-            {project.concept_narrative && (
-              <p className="text-neutral-400 font-light">
-                {project.concept_narrative}
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      {/* 5. Asymmetric Dual Parallax Plates (Magazine Cadence) */}
+      <AsymmetricImages
+        imageLeft={{
+          url: firstImage.image_url,
+          caption: firstImage.caption,
+        }}
+        imageRight={{
+          url: secondImage.image_url,
+          caption: secondImage.caption,
+        }}
+      />
 
-      {/* 5. Asymmetrical Image Gallery (Masonry & Banners) */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pb-24 sm:pb-36">
-        <div className="pb-8 border-b border-white/10 mb-12 flex items-center justify-between">
-          <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-500">
-            Project Visual Documentation
-          </span>
-          <span className="text-xs font-mono text-neutral-500">
-            {project.gallery.length} Plates
-          </span>
-        </div>
+      {/* 6. Inverted Dark Brand Architecture Block (#1b1b1e) */}
+      <InvertedSection
+        title="Architecture"
+        paragraphs={
+          project.inverted_section?.paragraphs || [
+            'A striking contemporary staircase at the centre is the defining feature of the residence. It connects all floors, creating a vertical tunnel of daylight that cascades from the roof down through four levels, creating a shadowy interplay of texture throughout the day.',
+            'The open plan layout of the lower ground floors gives the house a spacious, gallery-like feel. An eight-metre void between lower and ground floor acts as a primary light well, accentuating the vertical expanse between the levels.',
+          ]
+        }
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {project.gallery.map((img, idx) => {
-            // Determine rhythm based on aspect ratio or alternate index
-            // Banners and panoramic images span full 12 columns
-            // Detail shots span 6 columns
-            const isFullSpan =
-              img.aspect_ratio === 'panoramic' ||
-              idx === 0 ||
-              idx === project.gallery.length - 1;
+      {/* 7. Pinned Text with Adjacent Scrolling Photography */}
+      <PinnedTextSection
+        title="Interior Design"
+        paragraphs={
+          project.pinned_section?.paragraphs || [
+            'The interior backdrop is kept disciplined throughout the home to bring out key structural features. Soft grey walls reflect light and create a sense of calm, while bandsawn timber flooring adds texture and warmth.',
+            'High ceilings and open expanses of space create a gallery-like feel. Individual, more secluded retreats can be found in the private study, the guest bedroom suite, and the wellness gym.',
+            'The selection of natural finishes — including marble, brass, and hand-troweled micro-cement — harmonizes the imposing architectural details into an inviting family residence.',
+          ]
+        }
+        images={pinnedImages}
+      />
 
-            const colSpan = isFullSpan ? 'md:col-span-12' : 'md:col-span-6';
-            const aspectClass = isFullSpan
-              ? 'aspect-[21/10] sm:aspect-[2.3/1]'
-              : img.aspect_ratio === 'portrait'
-              ? 'aspect-[4/5]'
-              : 'aspect-[16/11]';
+      {/* 8. Interactive Floorplan Schematic Magnifier (View 1 vs View 2) */}
+      <BlueprintMagnifier />
 
-            return (
-              <figure key={img.id} className={`${colSpan} group flex flex-col space-y-3`}>
-                <div
-                  className={`relative w-full ${aspectClass} overflow-hidden bg-neutral-900 border border-white/10`}
-                >
-                  <Image
-                    src={img.image_url}
-                    alt={img.caption || `${project.title} detail`}
-                    fill
-                    sizes={
-                      isFullSpan
-                        ? '100vw'
-                        : '(max-width: 768px) 100vw, 50vw'
-                    }
-                    className="object-cover object-center filter grayscale-[30%] contrast-[1.05] transition-all duration-700 ease-out group-hover:scale-105 group-hover:grayscale-0"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
+      {/* 9. Award Recognition Badges */}
+      <AwardBadgeSection
+        headline={
+          project.award_citation?.headline ||
+          'The Sunday Times British Homes Awards, 2018 / 2024'
+        }
+        accolades={
+          project.award_citation?.accolades || [
+            'Winner: Best Interior Design',
+            'Highly Commended: Home Transformation',
+            'Shortlisted: International Design & Architecture Awards',
+          ]
+        }
+      />
 
-                {img.caption && (
-                  <figcaption className="text-[11px] font-mono uppercase tracking-wider text-neutral-500 pt-1 flex items-center justify-between">
-                    <span>
-                      Plate 0{idx + 1} &bull; {img.caption}
-                    </span>
-                    <span className="text-neutral-600 hidden sm:inline-block">
-                      {img.aspect_ratio}
-                    </span>
-                  </figcaption>
-                )}
-              </figure>
-            );
-          })}
-        </div>
-      </section>
+      {/* 10. Inline Case Study Client Inquiry Form */}
+      <ProjectInquiryForm projectTitle={project.title} />
 
-      {/* 6. Project Footer Pagination */}
-      <section className="border-t border-white/10 bg-[#08080a] py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-8 border-b border-white/10 gap-4">
-            <span className="text-[11px] font-mono uppercase tracking-[0.35em] text-neutral-500">
-              Next Case Study
-            </span>
-            <Link
-              href="/portfolio"
-              className="text-xs uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors"
-            >
-              All Projects &rarr;
-            </Link>
-          </div>
-
-          <Link
-            href={`/portfolio/${nextProject.slug}`}
-            className="group mt-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center focus:outline-none"
-          >
-            {/* Next Project Text Details */}
-            <div className="lg:col-span-7 space-y-4">
-              <span className="text-xs font-mono uppercase tracking-[0.25em] text-neutral-400">
-                {nextProject.specs.sector} &bull; {nextProject.location}
-              </span>
-              <h3 className="text-3xl sm:text-5xl md:text-6xl font-light uppercase tracking-tight text-white group-hover:text-neutral-300 transition-colors leading-tight">
-                {nextProject.title}
-              </h3>
-              <p className="text-xs sm:text-sm font-light text-neutral-400 line-clamp-2 max-w-xl">
-                {nextProject.description}
-              </p>
-              <div className="pt-2 inline-flex items-center gap-3 text-xs uppercase tracking-[0.25em] text-white border-b border-white/30 group-hover:border-white transition-colors pb-1">
-                <span>View Case Study</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </div>
-            </div>
-
-            {/* Next Project Thumbnail Preview */}
-            <div className="lg:col-span-5">
-              <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-900 border border-white/10">
-                <Image
-                  src={nextProject.main_image_url}
-                  alt={nextProject.title}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 40vw"
-                  className="object-cover object-center filter grayscale-[35%] contrast-[1.05] transition-all duration-700 group-hover:scale-105 group-hover:grayscale-0"
-                />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-500" />
-                <div className="absolute top-4 right-4">
-                  <div className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white">
-                    <ArrowUpRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </section>
+      {/* 11. Expanding Next-Project CTA Banner */}
+      <ExpandingCtaBanner nextProject={nextProject} />
     </article>
   );
 }

@@ -51,11 +51,37 @@ export interface Service {
   children?: Service[];
 }
 
+export interface BlueprintView {
+  key: string;
+  label: string;
+  title: string;
+  level: string;
+  area_sqft?: number;
+}
+
+export interface AwardCitation {
+  headline: string;
+  accolades: string[];
+}
+
+export interface PinnedSection {
+  title: string;
+  paragraphs: string[];
+  images: string[];
+}
+
+export interface InvertedSection {
+  title: string;
+  paragraphs: string[];
+}
+
 export interface ProjectSpecs {
   sector: string;
   location: string;
   completion: string;
   scope: string;
+  square_footage?: string;
+  disciplines?: string;
 }
 
 export interface Project {
@@ -73,6 +99,13 @@ export interface Project {
   specs: ProjectSpecs;
   category?: Category;
   gallery: ProjectImage[];
+  blueprint_views?: BlueprintView[];
+  award_citation?: AwardCitation;
+  pinned_section?: PinnedSection;
+  inverted_section?: InvertedSection;
+  details_section?: InvertedSection;
+  next_slug?: string;
   created_at?: string;
   updated_at?: string;
 }
+

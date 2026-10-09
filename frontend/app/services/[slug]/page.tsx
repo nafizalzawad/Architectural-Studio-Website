@@ -54,7 +54,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
     .slice(0, 3);
 
   return (
-    <article className="w-full bg-[#0c0d0e] text-white">
+    <article className="w-full bg-[#1b1b1e] text-white">
       {/* 1. Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-6 pb-6">
         <Link

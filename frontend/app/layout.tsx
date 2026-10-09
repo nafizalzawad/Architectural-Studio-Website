@@ -3,6 +3,8 @@ import './globals.css';
 import { NavigationProvider } from '@/context/NavigationContext';
 import Header from '@/components/Header';
 import NavigationDrawer from '@/components/NavigationDrawer';
+import QuickContactDrawer from '@/components/QuickContactDrawer';
+import Preloader from '@/components/Preloader';
 import Footer from '@/components/Footer';
 import PageTransition from '@/components/PageTransition';
 
@@ -10,13 +12,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0c0d0e',
+  themeColor: '#1b1b1e',
 };
 
 export const metadata: Metadata = {
-  title: 'Minale + Mann | Bespoke Architecture, Interior Design & Build London',
+  title: 'Architecture and Interior Design Studio London | Minale + Mann',
   description:
-    'Award-winning London architectural design studio. Specialising in high-end residential architecture, interior design, planning, conservation, and turn-key construction.',
+    'Minale + Mann is an architecture and interior design studio in London, specialising in bespoke interior design and architectural services.',
   keywords: [
     'Minale + Mann',
     'Architects London',
@@ -35,20 +37,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark scroll-smooth">
-      <body className="bg-[#0c0d0e] text-[#f5f5f7] antialiased selection:bg-neutral-200 selection:text-neutral-900 min-h-screen flex flex-col">
+      <body className="bg-[#1b1b1e] text-[#f5f5f7] antialiased selection:bg-neutral-200 selection:text-neutral-900 min-h-screen flex flex-col">
         <NavigationProvider>
-          {/* Fixed Transparent Architectural Header */}
+          {/* Split-Screen Animated Vector Logo Preloader */}
+          <Preloader />
+
+          {/* Fixed Architectural Header with Vector SVG Logo & Contrast Engine */}
           <Header />
 
-          {/* Full-Screen Framer Motion Off-Canvas Drawer */}
+          {/* 3-Tier Horizontal Cascading Off-Canvas Menu */}
           <NavigationDrawer />
 
-          {/* Children wrapped with Smooth Fade-In Transition */}
+          {/* Global Slide-Over Quick Contact Modal (.mm-overlay) */}
+          <QuickContactDrawer />
+
+          {/* Main Page Content with PageTransition */}
           <div className="flex-1 flex flex-col">
             <PageTransition>{children}</PageTransition>
           </div>
 
-          {/* Minimalist Architectural Footer */}
+          {/* Architectural Footer */}
           <Footer />
         </NavigationProvider>
       </body>

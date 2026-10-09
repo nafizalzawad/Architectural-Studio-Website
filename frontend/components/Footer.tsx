@@ -82,28 +82,28 @@ export const Footer: React.FC = () => {
               </ul>
             </div>
 
-            {/* Studio Headquarters */}
+              {/* Studio Headquarters */}
             <div className="col-span-2 sm:col-span-1">
               <h4 className="text-[11px] font-mono uppercase tracking-[0.25em] text-neutral-500 mb-4">
-                London Office
+                London Studio
               </h4>
               <address className="not-italic text-xs font-light text-neutral-400 space-y-1.5 leading-relaxed">
-                <p>39-41 Battersea Park Rd</p>
-                <p>London SW11 4LS</p>
+                <p>Archway 69, 324 Queenstown Rd</p>
+                <p>Battersea, London SW8 4LT</p>
                 <p className="pt-2">
                   <a
-                    href="tel:+442077386732"
+                    href="tel:02039586074"
                     className="hover:text-white transition-colors block text-neutral-300"
                   >
-                    +44 (0)20 7738 6732
+                    020 3958 6074
                   </a>
                 </p>
                 <p>
                   <a
-                    href="mailto:studio@minaleandmann.com"
+                    href="mailto:generalenquiries@minaleandmann.com"
                     className="hover:text-white transition-colors block text-neutral-300"
                   >
-                    studio@minaleandmann.com
+                    generalenquiries@minaleandmann.com
                   </a>
                 </p>
               </address>

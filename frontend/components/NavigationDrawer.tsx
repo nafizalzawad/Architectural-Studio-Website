@@ -4,440 +4,350 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigation } from '@/context/NavigationContext';
-import {
-  ChevronDown,
-  ChevronRight,
-  ArrowLeft,
-  X,
-  ArrowUpRight,
-  MapPin,
-  Phone,
-  Mail,
-} from 'lucide-react';
+import { X, ChevronRight, Award, ArrowUpRight } from 'lucide-react';
 
-interface SubService {
-  title: string;
-  href: string;
-}
-
-interface ServiceItem {
-  title: string;
-  href?: string;
-  subItems?: SubService[];
-}
-
-const serviceItems: ServiceItem[] = [
-  {
-    title: 'Architectural Design',
-    href: '/services/architectural-design',
-  },
-  {
-    title: 'Planning Applications',
-    href: '/services/planning-applications',
-  },
-  {
-    title: 'Interior Design',
-    href: '/services/interior-design',
-    subItems: [
-      { title: 'Residential', href: '/services/interior-design/residential' },
-      { title: 'Commercial', href: '/services/interior-design/commercial' },
-    ],
-  },
-  {
-    title: 'Conservation & Heritage',
-    href: '/services/conservation-heritage',
-  },
-  {
-    title: 'Create & Construct',
-    href: '/services/create-construct',
-  },
-];
+type Tier1Item = 'services' | 'portfolio' | null;
+type Tier2ServiceItem = 'architecture' | 'interior' | 'construct' | null;
 
 export const NavigationDrawer: React.FC = () => {
   const { isOpen, closeMenu } = useNavigation();
 
-  // Accordion state
-  const [isServicesOpen, setIsServicesOpen] = useState<boolean>(false);
-  const [isInteriorDesignOpen, setIsInteriorDesignOpen] = useState<boolean>(false);
+  // Active hover/selection state across tiers
+  const [activeTier1, setActiveTier1] = useState<Tier1Item>('services');
+  const [activeTier2Service, setActiveTier2Service] = useState<Tier2ServiceItem>('architecture');
 
-  // Reset nested open states when drawer closes
+  // Reset states on drawer close
   React.useEffect(() => {
     if (!isOpen) {
-      setIsServicesOpen(false);
-      setIsInteriorDesignOpen(false);
+      setActiveTier1('services');
+      setActiveTier2Service('architecture');
     }
   }, [isOpen]);
-
-  // Framer Motion variants
-  const drawerVariants = {
-    closed: {
-      opacity: 0,
-      y: '-100%',
-      transition: {
-        duration: 0.5,
-        ease: [0.76, 0, 0.24, 1] as const,
-      },
-    },
-    open: {
-      opacity: 1,
-      y: '0%',
-      transition: {
-        duration: 0.6,
-        ease: [0.22, 1, 0.36, 1] as const,
-      },
-    },
-  };
-
-  const menuContainerVariants = {
-    closed: { opacity: 0 },
-    open: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.25,
-      },
-    },
-  };
-
-  const menuItemVariants = {
-    closed: { opacity: 0, y: 20 },
-    open: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1] as const,
-      },
-    },
-  };
-
-  const accordionVariants = {
-    collapsed: {
-      opacity: 0,
-      height: 0,
-      transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] as const },
-    },
-    expanded: {
-      opacity: 1,
-      height: 'auto',
-      transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const },
-    },
-  };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          id="navigation-drawer"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Site Navigation"
-          initial="closed"
-          animate="open"
-          exit="closed"
-          variants={drawerVariants}
-          className="fixed inset-0 z-40 bg-[#0a0a0c] text-white flex flex-col justify-between overflow-y-auto"
-        >
-          {/* Header Bar inside Drawer for close action & branding */}
-          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 pt-7 md:pt-8 pb-4 flex items-center justify-between border-b border-white/10">
-            <Link
-              href="/"
-              onClick={closeMenu}
-              className="text-sm sm:text-base font-light tracking-[0.28em] uppercase text-white hover:opacity-75 transition-opacity"
-            >
-              Minale + Mann
-            </Link>
+        <div id="navigation-drawer" className="fixed inset-0 z-[90] overflow-hidden">
+          {/* Backdrop veil */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={closeMenu}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+          />
 
-            <button
-              type="button"
-              onClick={closeMenu}
-              className="group flex items-center gap-2.5 text-xs uppercase tracking-[0.25em] text-neutral-400 hover:text-white transition-colors focus:outline-none"
-              aria-label="Close navigation menu"
-            >
-              <span>Close</span>
-              <X className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" />
-            </button>
-          </div>
+          {/* Full-screen drawer container */}
+          <motion.div
+            initial={{ opacity: 0, y: '-100%' }}
+            animate={{ opacity: 1, y: '0%' }}
+            exit={{ opacity: 0, y: '-100%' }}
+            transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
+            className="absolute inset-0 bg-[#1b1b1e] text-white flex flex-col justify-between p-6 sm:p-12 lg:p-16 overflow-y-auto"
+          >
+            {/* Top Bar with Logo & Close Button */}
+            <div className="flex items-center justify-between pb-8 border-b border-white/10">
+              <Link href="/" onClick={closeMenu} className="focus:outline-none">
+                <svg
+                  viewBox="0 0 269 95.6"
+                  className="w-32 sm:w-40 h-auto fill-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <polygon points="269,94.5 237.4,0 237.4,0 221.6,0 221.6,0 197.8,71 174,0 174,0 158.3,0 158.3,0 134.5,71 110.7,0 110.7,0 95,0 95,0 71.2,71 47.4,0 47.4,0 31.7,0 31.7,0 0,94.5 15.7,94.5 39.5,23.4 63.3,94.5 63.4,94.5 79.1,94.5 79.1,94.5 102.9,23.4 126.7,94.5 126.7,94.5 142.4,94.5 142.4,94.5 166.2,23.4 190,94.5 190,94.5 205.7,94.5 205.7,94.5 229.5,23.4 253.3,94.5" />
+                </svg>
+              </Link>
 
-          {/* Main Navigation Content Grid */}
-          <div className="flex-1 max-w-7xl w-full mx-auto px-6 sm:px-10 lg:px-16 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-            
-            {/* Primary Nav Links (8 cols) */}
-            <motion.nav
-              variants={menuContainerVariants}
-              initial="closed"
-              animate="open"
-              className="lg:col-span-8 flex flex-col space-y-6 sm:space-y-8"
-            >
-              {/* Top-Level: SERVICES with nested accordion */}
-              <motion.div variants={menuItemVariants} className="border-b border-white/10 pb-6">
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setIsServicesOpen((prev) => !prev)}
-                    className="group flex items-center gap-4 text-2xl sm:text-4xl md:text-5xl font-light tracking-tight hover:text-neutral-300 transition-colors focus:outline-none text-left"
-                    aria-expanded={isServicesOpen}
-                  >
-                    <span className="text-xs sm:text-sm font-mono text-neutral-500 uppercase tracking-widest">
-                      01
-                    </span>
-                    <span className="uppercase tracking-[0.08em]">Services</span>
-                    <ChevronDown
-                      className={`w-5 h-5 sm:w-6 sm:h-6 text-neutral-400 transition-transform duration-300 ${
-                        isServicesOpen ? 'rotate-180 text-white' : ''
-                      }`}
-                    />
-                  </button>
+              <button
+                type="button"
+                onClick={closeMenu}
+                className="group flex items-center gap-3 text-neutral-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
+                aria-label="Close navigation"
+              >
+                <span className="text-xs uppercase font-mono tracking-[0.25em]">Close</span>
+                <X className="w-6 h-6 stroke-1 transition-transform group-hover:rotate-90" />
+              </button>
+            </div>
 
-                  {/* Back button visible when Services accordion is expanded */}
-                  {isServicesOpen && (
+            {/* Middle: 3-Tier Cascading Horizontal Menu */}
+            <div className="my-auto py-10 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
+              {/* TIER 1: Main Menu */}
+              <div className="md:col-span-4 lg:col-span-4 space-y-4 sm:space-y-6">
+                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 block mb-4">
+                  01 // Navigation
+                </span>
+
+                <ul className="space-y-3 sm:space-y-4">
+                  {/* Services */}
+                  <li>
                     <button
                       type="button"
-                      onClick={() => {
-                        setIsServicesOpen(false);
-                        setIsInteriorDesignOpen(false);
-                      }}
-                      className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-neutral-400 hover:text-white transition-colors px-3 py-1.5 rounded border border-white/10 hover:border-white/30"
+                      onMouseEnter={() => setActiveTier1('services')}
+                      onClick={() => setActiveTier1('services')}
+                      className={`text-2xl sm:text-4xl lg:text-5xl font-light uppercase tracking-tight transition-all duration-300 flex items-center gap-4 text-left w-full cursor-pointer ${
+                        activeTier1 === 'services'
+                          ? 'text-white translate-x-2'
+                          : 'text-neutral-500 hover:text-neutral-300'
+                      }`}
                     >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Back</span>
+                      <span>Services</span>
+                      {activeTier1 === 'services' && (
+                        <span className="w-2 h-2 rounded-full bg-white hidden sm:inline-block" />
+                      )}
                     </button>
-                  )}
-                </div>
+                  </li>
 
-                {/* Level 1 Services Accordion Content */}
-                <AnimatePresence>
-                  {isServicesOpen && (
-                    <motion.div
-                      initial="collapsed"
-                      animate="expanded"
-                      exit="collapsed"
-                      variants={accordionVariants}
-                      className="overflow-hidden pl-7 sm:pl-12 pt-6 space-y-4"
+                  {/* Portfolio */}
+                  <li>
+                    <button
+                      type="button"
+                      onMouseEnter={() => setActiveTier1('portfolio')}
+                      onClick={() => setActiveTier1('portfolio')}
+                      className={`text-2xl sm:text-4xl lg:text-5xl font-light uppercase tracking-tight transition-all duration-300 flex items-center gap-4 text-left w-full cursor-pointer ${
+                        activeTier1 === 'portfolio'
+                          ? 'text-white translate-x-2'
+                          : 'text-neutral-500 hover:text-neutral-300'
+                      }`}
                     >
-                      {serviceItems.map((item) => {
-                        // Nested Sub-Accordion for "Interior Design"
-                        if (item.subItems) {
-                          return (
-                            <div key={item.title} className="pt-2 pb-2">
-                              <div className="flex items-center justify-between">
-                                <button
-                                  type="button"
-                                  onClick={() => setIsInteriorDesignOpen((prev) => !prev)}
-                                  className="group flex items-center gap-3 text-lg sm:text-2xl font-light text-neutral-300 hover:text-white transition-colors focus:outline-none"
-                                  aria-expanded={isInteriorDesignOpen}
-                                >
-                                  <ChevronRight
-                                    className={`w-4 h-4 text-neutral-400 transition-transform duration-300 ${
-                                      isInteriorDesignOpen ? 'rotate-90 text-white' : ''
-                                    }`}
-                                  />
-                                  <span className="tracking-wide">{item.title}</span>
-                                </button>
+                      <span>Portfolio</span>
+                      {activeTier1 === 'portfolio' && (
+                        <span className="w-2 h-2 rounded-full bg-white hidden sm:inline-block" />
+                      )}
+                    </button>
+                  </li>
 
-                                {/* Back button for Interior Design nested level */}
-                                {isInteriorDesignOpen && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsInteriorDesignOpen(false)}
-                                    className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-neutral-400 hover:text-white transition-colors px-2.5 py-1 rounded border border-white/10"
-                                  >
-                                    <ArrowLeft className="w-3 h-3" />
-                                    <span>Back to Services</span>
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Level 2 Sub-items: Residential, Commercial */}
-                              <AnimatePresence>
-                                {isInteriorDesignOpen && (
-                                  <motion.div
-                                    initial="collapsed"
-                                    animate="expanded"
-                                    exit="collapsed"
-                                    variants={accordionVariants}
-                                    className="overflow-hidden pl-7 sm:pl-10 pt-3 space-y-2.5"
-                                  >
-                                    {item.subItems.map((sub) => (
-                                      <div key={sub.title}>
-                                        <Link
-                                          href={sub.href}
-                                          onClick={closeMenu}
-                                          className="group inline-flex items-center gap-2 text-sm sm:text-base font-light text-neutral-400 hover:text-white transition-colors"
-                                        >
-                                          <span className="w-1.5 h-[1px] bg-neutral-500 group-hover:w-3 group-hover:bg-white transition-all" />
-                                          <span>{sub.title}</span>
-                                          <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-neutral-400" />
-                                        </Link>
-                                      </div>
-                                    ))}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </div>
-                          );
-                        }
-
-                        // Regular service items
-                        return (
-                          <div key={item.title}>
-                            <Link
-                              href={item.href || '#'}
-                              onClick={closeMenu}
-                              className="group inline-flex items-center gap-3 text-lg sm:text-2xl font-light text-neutral-300 hover:text-white transition-colors"
-                            >
-                              <span className="tracking-wide">{item.title}</span>
-                              <ArrowUpRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-neutral-400" />
-                            </Link>
-                          </div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              {/* Top-Level: PORTFOLIO */}
-              <motion.div variants={menuItemVariants} className="border-b border-white/10 pb-6">
-                <Link
-                  href="/portfolio"
-                  onClick={closeMenu}
-                  className="group flex items-center justify-between text-2xl sm:text-4xl md:text-5xl font-light tracking-tight hover:text-neutral-300 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs sm:text-sm font-mono text-neutral-500 uppercase tracking-widest">
-                      02
-                    </span>
-                    <span className="uppercase tracking-[0.08em]">Portfolio</span>
-                  </div>
-                  <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
-                </Link>
-              </motion.div>
-
-              {/* Top-Level: ABOUT */}
-              <motion.div variants={menuItemVariants} className="border-b border-white/10 pb-6">
-                <Link
-                  href="/about"
-                  onClick={closeMenu}
-                  className="group flex items-center justify-between text-2xl sm:text-4xl md:text-5xl font-light tracking-tight hover:text-neutral-300 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs sm:text-sm font-mono text-neutral-500 uppercase tracking-widest">
-                      03
-                    </span>
-                    <span className="uppercase tracking-[0.08em]">About</span>
-                  </div>
-                  <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
-                </Link>
-              </motion.div>
-
-              {/* Top-Level: CONTACT */}
-              <motion.div variants={menuItemVariants} className="border-b border-white/10 pb-6">
-                <Link
-                  href="/contact"
-                  onClick={closeMenu}
-                  className="group flex items-center justify-between text-2xl sm:text-4xl md:text-5xl font-light tracking-tight hover:text-neutral-300 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs sm:text-sm font-mono text-neutral-500 uppercase tracking-widest">
-                      04
-                    </span>
-                    <span className="uppercase tracking-[0.08em]">Contact</span>
-                  </div>
-                  <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
-                </Link>
-              </motion.div>
-            </motion.nav>
-
-            {/* Architectural Studio Information Panel (4 cols) */}
-            <motion.div
-              variants={menuItemVariants}
-              className="lg:col-span-4 flex flex-col justify-between space-y-10 border-l border-white/10 lg:pl-10 text-neutral-400"
-            >
-              <div>
-                <h3 className="text-xs font-mono uppercase tracking-[0.25em] text-neutral-500 mb-4">
-                  Studio Inquiry
-                </h3>
-                <p className="text-sm font-light text-neutral-300 leading-relaxed mb-6">
-                  Bespoke architectural design, comprehensive planning, and turn-key construction
-                  crafted for distinguished residences and commercial spaces.
-                </p>
-
-                <div className="space-y-3 text-xs sm:text-sm font-light text-neutral-300">
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
-                    <span>39-41 Battersea Park Road, London SW11 4LS</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="w-4 h-4 text-neutral-500 shrink-0" />
-                    <a
-                      href="tel:+442077386732"
-                      className="hover:text-white transition-colors"
+                  {/* About */}
+                  <li>
+                    <Link
+                      href="/about"
+                      onClick={closeMenu}
+                      className="text-2xl sm:text-4xl lg:text-5xl font-light uppercase tracking-tight text-neutral-500 hover:text-white transition-all duration-300 block"
                     >
-                      +44 (0)20 7738 6732
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <Mail className="w-4 h-4 text-neutral-500 shrink-0" />
-                    <a
-                      href="mailto:studio@minaleandmann.com"
-                      className="hover:text-white transition-colors"
+                      About
+                    </Link>
+                  </li>
+
+                  {/* Contact */}
+                  <li>
+                    <Link
+                      href="/contact"
+                      onClick={closeMenu}
+                      className="text-2xl sm:text-4xl lg:text-5xl font-light uppercase tracking-tight text-neutral-500 hover:text-white transition-all duration-300 block"
                     >
-                      studio@minaleandmann.com
-                    </a>
-                  </div>
-                </div>
+                      Contact
+                    </Link>
+                  </li>
+                </ul>
               </div>
 
-              <div>
-                <h3 className="text-xs font-mono uppercase tracking-[0.25em] text-neutral-500 mb-3">
-                  Connect
-                </h3>
-                <div className="flex items-center gap-5 text-xs uppercase tracking-widest text-neutral-400">
-                  <a
-                    href="https://instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
-                  >
-                    Instagram
-                  </a>
-                  <span className="text-neutral-700">&bull;</span>
-                  <a
-                    href="https://pinterest.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
-                  >
-                    Pinterest
-                  </a>
-                  <span className="text-neutral-700">&bull;</span>
-                  <a
-                    href="https://linkedin.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
-                  >
-                    LinkedIn
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              {/* TIER 2: Secondary Tier (Divided by thin vertical hairline) */}
+              <div className="md:col-span-4 lg:col-span-4 md:border-l border-white/10 md:pl-8 lg:pl-12 space-y-4 sm:space-y-6">
+                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 block mb-4">
+                  02 // Categories
+                </span>
 
-          {/* Footer Bar inside Drawer */}
-          <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] text-neutral-500 uppercase tracking-widest">
-            <span>&copy; {new Date().getFullYear()} Minale + Mann Architects</span>
-            <div className="flex items-center gap-6 mt-2 sm:mt-0">
-              <Link href="/privacy-policy" onClick={closeMenu} className="hover:text-neutral-300 transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" onClick={closeMenu} className="hover:text-neutral-300 transition-colors">
-                Terms of Service
-              </Link>
+                {activeTier1 === 'services' && (
+                  <ul className="space-y-3 sm:space-y-4">
+                    <li>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActiveTier2Service('architecture')}
+                        onClick={() => setActiveTier2Service('architecture')}
+                        className={`text-lg sm:text-2xl font-light tracking-wide transition-all text-left w-full cursor-pointer flex items-center justify-between ${
+                          activeTier2Service === 'architecture'
+                            ? 'text-white'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        <span>Architectural Design</span>
+                        <ChevronRight className="w-4 h-4 text-neutral-600" />
+                      </button>
+                    </li>
+
+                    <li>
+                      <Link
+                        href="/services/planning-applications"
+                        onClick={closeMenu}
+                        className="text-lg sm:text-2xl font-light tracking-wide text-neutral-400 hover:text-white transition-colors block"
+                      >
+                        Planning Applications
+                      </Link>
+                    </li>
+
+                    <li>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActiveTier2Service('interior')}
+                        onClick={() => setActiveTier2Service('interior')}
+                        className={`text-lg sm:text-2xl font-light tracking-wide transition-all text-left w-full cursor-pointer flex items-center justify-between ${
+                          activeTier2Service === 'interior'
+                            ? 'text-white'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        <span>Interior Design</span>
+                        <ChevronRight className="w-4 h-4 text-neutral-600" />
+                      </button>
+                    </li>
+
+                    <li>
+                      <Link
+                        href="/services/conservation-heritage"
+                        onClick={closeMenu}
+                        className="text-lg sm:text-2xl font-light tracking-wide text-neutral-400 hover:text-white transition-colors block"
+                      >
+                        Conservation & Heritage Design
+                      </Link>
+                    </li>
+
+                    <li>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActiveTier2Service('construct')}
+                        onClick={() => setActiveTier2Service('construct')}
+                        className={`text-lg sm:text-2xl font-light tracking-wide transition-all text-left w-full cursor-pointer flex items-center justify-between ${
+                          activeTier2Service === 'construct'
+                            ? 'text-white'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        <span>Create & Construct</span>
+                        <ChevronRight className="w-4 h-4 text-neutral-600" />
+                      </button>
+                    </li>
+                  </ul>
+                )}
+
+                {activeTier1 === 'portfolio' && (
+                  <ul className="space-y-3 sm:space-y-4">
+                    <li>
+                      <Link
+                        href="/portfolio?category=residential"
+                        onClick={closeMenu}
+                        className="text-lg sm:text-2xl font-light tracking-wide text-neutral-400 hover:text-white transition-colors block"
+                      >
+                        Residential Portfolio
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/portfolio?category=commercial"
+                        onClick={closeMenu}
+                        className="text-lg sm:text-2xl font-light tracking-wide text-neutral-400 hover:text-white transition-colors block"
+                      >
+                        Commercial Portfolio
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/portfolio?category=heritage"
+                        onClick={closeMenu}
+                        className="text-lg sm:text-2xl font-light tracking-wide text-neutral-400 hover:text-white transition-colors block"
+                      >
+                        Conservation & Heritage
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+              </div>
+
+              {/* TIER 3: Tertiary Sector Breakdown */}
+              <div className="md:col-span-4 lg:col-span-4 md:border-l border-white/10 md:pl-8 lg:pl-12 space-y-4 sm:space-y-6">
+                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-500 block mb-4">
+                  03 // Sector Scope
+                </span>
+
+                {activeTier1 === 'services' && activeTier2Service && (
+                  <ul className="space-y-3 sm:space-y-4">
+                    <li>
+                      <Link
+                        href={`/services/${
+                          activeTier2Service === 'architecture'
+                            ? 'architectural-design'
+                            : activeTier2Service === 'interior'
+                            ? 'interior-design'
+                            : 'create-construct'
+                        }?sector=residential`}
+                        onClick={closeMenu}
+                        className="text-base sm:text-xl font-light tracking-wide text-neutral-300 hover:text-white transition-colors flex items-center gap-2 group"
+                      >
+                        <span>Residential</span>
+                        <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href={`/services/${
+                          activeTier2Service === 'architecture'
+                            ? 'architectural-design'
+                            : activeTier2Service === 'interior'
+                            ? 'interior-design'
+                            : 'create-construct'
+                        }?sector=commercial`}
+                        onClick={closeMenu}
+                        className="text-base sm:text-xl font-light tracking-wide text-neutral-300 hover:text-white transition-colors flex items-center gap-2 group"
+                      >
+                        <span>Commercial</span>
+                        <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    </li>
+                  </ul>
+                )}
+
+                {activeTier1 === 'portfolio' && (
+                  <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed max-w-xs">
+                    Explore our curated case studies across prime central London, featuring detailed architectural floorplans, structural specifications, and bespoke interiors.
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Bottom: Awards Emblems & Social Attribution */}
+            <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-neutral-400">
+              {/* Award Badges */}
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-2.5">
+                  <Award className="w-5 h-5 text-white stroke-1" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">
+                    Winner: International Design & Architecture Awards
+                  </span>
+                </div>
+                <div className="hidden sm:flex items-center gap-2.5">
+                  <Award className="w-5 h-5 text-white stroke-1" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">
+                    Sunday Times British Homes Awards
+                  </span>
+                </div>
+              </div>
+
+              {/* Social & Studio Links */}
+              <div className="flex items-center gap-6">
+                <a
+                  href="https://www.instagram.com/minaleandmann_"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors flex items-center gap-1.5"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-3.5 h-3.5 fill-none stroke-current stroke-2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                  </svg>
+                  <span className="text-[10px] uppercase font-mono tracking-wider">Instagram</span>
+                </a>
+                <span className="text-neutral-600">&bull;</span>
+                <span className="text-[10px] font-mono tracking-wider text-neutral-500">
+                  Battersea, London SW8
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

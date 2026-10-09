@@ -15,7 +15,7 @@ export default function ServicesIndexPage() {
   const allServices = getServices();
 
   return (
-    <div className="w-full bg-[#0c0d0e] text-white">
+    <div className="w-full bg-[#1b1b1e] text-white">
       {/* Services Header */}
       <section className="pt-8 sm:pt-14 pb-12 px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full border-b border-white/10">
         <span className="text-[11px] font-mono uppercase tracking-[0.35em] text-neutral-500 block mb-3">

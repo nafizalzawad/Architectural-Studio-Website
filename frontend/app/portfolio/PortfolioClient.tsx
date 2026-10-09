@@ -44,7 +44,7 @@ export default function PortfolioClient({
   }, [initialProjects, activeCategory]);
 
   return (
-    <div className="w-full bg-[#0c0d0e] text-white min-h-screen">
+    <div className="w-full bg-[#1b1b1e] text-white min-h-screen">
       {/* Portfolio Header */}
       <section className="pt-8 sm:pt-14 pb-10 px-6 sm:px-10 lg:px-16 max-w-7xl mx-auto w-full">
         <div className="space-y-4 max-w-3xl">
