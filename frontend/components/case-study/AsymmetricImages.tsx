@@ -17,13 +17,13 @@ export const AsymmetricImages: React.FC<AsymmetricImagesProps> = ({
       <div className="max-w-[1720px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14 items-start">
         {/* Left Column (Padded with top offset for asymmetrical rhythm) */}
         <div className="space-y-3 pt-0 md:pt-14">
-          <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-neutral-100 border border-neutral-200 shadow-sm">
+          <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-neutral-100 border border-neutral-200 shadow-sm group">
             <Image
               src={imageLeft.url}
               alt={imageLeft.caption || 'Architectural detail'}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center filter contrast-[1.04]"
+              className="object-cover object-center filter contrast-[1.04] transition-transform duration-700 ease-out group-hover:scale-105"
             />
           </div>
           {imageLeft.caption && (
@@ -35,13 +35,13 @@ export const AsymmetricImages: React.FC<AsymmetricImagesProps> = ({
 
         {/* Right Column */}
         <div className="space-y-3">
-          <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-neutral-100 border border-neutral-200 shadow-sm">
+          <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-neutral-100 border border-neutral-200 shadow-sm group">
             <Image
               src={imageRight.url}
               alt={imageRight.caption || 'Architectural detail'}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center filter contrast-[1.04]"
+              className="object-cover object-center filter contrast-[1.04] transition-transform duration-700 ease-out group-hover:scale-105"
             />
           </div>
           {imageRight.caption && (

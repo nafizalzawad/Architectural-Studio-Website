@@ -25,13 +25,13 @@ export const PinnedTextSection: React.FC<PinnedTextSectionProps> = ({
         <div className="lg:col-span-7 space-y-12 sm:space-y-16">
           {images.map((img, idx) => (
             <div key={idx} className="space-y-3">
-              <div className="relative aspect-[4/3] sm:aspect-[16/11] w-full overflow-hidden bg-neutral-100 border border-neutral-200">
+              <div className="relative aspect-[4/3] sm:aspect-[16/11] w-full overflow-hidden bg-neutral-100 border border-neutral-200 group">
                 <Image
                   src={img.url}
                   alt={`${title} view ${idx + 1}`}
                   fill
                   sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="object-cover object-center filter contrast-[1.03]"
+                  className="object-cover object-center filter contrast-[1.03] transition-transform duration-700 ease-out group-hover:scale-105"
                 />
               </div>
               {img.caption && (

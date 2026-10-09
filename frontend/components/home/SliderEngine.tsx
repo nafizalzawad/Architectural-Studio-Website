@@ -307,7 +307,7 @@ export const SliderEngine: React.FC = () => {
                   isOverviewMode ? 'cursor-pointer group' : ''
                 }`}
               >
-                {/* Image Container */}
+                {/* Image Container with Ambient Slow Zoom and Overview Border */}
                 <div
                   className={`relative w-full h-full overflow-hidden transition-all duration-700 ${
                     isOverviewMode
@@ -317,17 +317,32 @@ export const SliderEngine: React.FC = () => {
                       : 'opacity-100'
                   }`}
                 >
-                  <Image
-                    src={slide.imageUrl}
-                    alt={slide.heading}
-                    fill
-                    priority={idx === 0 || isSelected}
-                    sizes="100vw"
-                    className="object-cover object-center filter contrast-[1.03]"
-                  />
+                  {/* Ambient Ken Burns Slow Zoom */}
+                  <motion.div
+                    key={isSelected && !isOverviewMode ? `kenburns-${idx}` : `idle-${idx}`}
+                    initial={{ scale: 1 }}
+                    animate={{ scale: isSelected && !isOverviewMode ? 1.06 : 1 }}
+                    transition={{
+                      duration: isSelected && !isOverviewMode ? 9 : 0.6,
+                      ease: 'easeOut',
+                    }}
+                    className={`relative w-full h-full will-change-transform ${
+                      isOverviewMode ? 'transition-transform duration-500 group-hover:scale-105' : ''
+                    }`}
+                  >
+                    <Image
+                      src={slide.imageUrl}
+                      alt={slide.heading}
+                      fill
+                      priority={idx === 0 || isSelected}
+                      sizes="100vw"
+                      className="object-cover object-center filter contrast-[1.03]"
+                    />
+                  </motion.div>
+
                   {/* Subtle darkening for editorial contrast */}
                   <div
-                    className={`absolute inset-0 transition-colors duration-500 ${
+                    className={`absolute inset-0 transition-colors duration-500 pointer-events-none ${
                       isOverviewMode
                         ? isSelected
                           ? 'bg-black/15'

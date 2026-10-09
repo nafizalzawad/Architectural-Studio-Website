@@ -116,16 +116,16 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           </div>
 
           {/* Right Column: Full-Bleed Architectural Photography (5 cols) */}
-          <div className="lg:col-span-5 relative min-h-[420px] lg:min-h-full bg-neutral-900 overflow-hidden">
+          <div className="lg:col-span-5 relative min-h-[420px] lg:min-h-full bg-neutral-900 overflow-hidden group">
             <Image
               src={service.hero_image_url || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2000&q=85'}
               alt={service.title}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 42vw"
-              className="object-cover object-center filter grayscale-[30%] contrast-[1.05]"
+              className="object-cover object-center filter grayscale-[30%] contrast-[1.05] transition-transform duration-1000 ease-out group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 pointer-events-none" />
             <div className="absolute bottom-8 left-8 right-8">
               <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 bg-black/70 backdrop-blur-md px-3 py-1.5 border border-white/10">
                 Practice Reference // Plate 0{service.id}

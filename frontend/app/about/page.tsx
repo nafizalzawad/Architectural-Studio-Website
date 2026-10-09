@@ -111,15 +111,15 @@ export default function AboutPage() {
 
       {/* 2. Studio Full-Bleed Imagery */}
       <section className="max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-16 py-12">
-        <div className="relative aspect-[16/8] sm:aspect-[2.3/1] w-full overflow-hidden bg-neutral-900 border border-white/10">
+        <div className="relative aspect-[16/8] sm:aspect-[2.3/1] w-full overflow-hidden bg-neutral-900 border border-white/10 group">
           <Image
             src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=2400&q=85"
             alt="Minale + Mann London Studio Workshop"
             fill
             sizes="100vw"
-            className="object-cover object-center filter grayscale-[35%] contrast-[1.05]"
+            className="object-cover object-center filter grayscale-[35%] contrast-[1.05] transition-transform duration-1000 ease-out group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 pointer-events-none" />
           <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10">
             <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 bg-black/70 px-3 py-1.5 border border-white/10">
               Battersea Park Road Studio // London SW11

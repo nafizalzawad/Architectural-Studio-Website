@@ -94,16 +94,16 @@ export default async function ProjectCaseStudyPage({ params }: PageProps) {
 
       {/* 2. Full-Bleed Hero Photograph & Volumetric Title */}
       <section className="w-full px-4 sm:px-8 lg:px-16 max-w-[1720px] mx-auto">
-        <div className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[2.4/1] w-full overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl">
+        <div className="relative aspect-[16/9] sm:aspect-[21/9] lg:aspect-[2.4/1] w-full overflow-hidden bg-neutral-900 border border-white/10 shadow-2xl group">
           <Image
             src={project.main_image_url}
             alt={project.title}
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center filter contrast-[1.05]"
+            className="object-cover object-center filter contrast-[1.05] transition-transform duration-1000 ease-out group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/30 pointer-events-none" />
 
           {/* Floating Title HUD */}
           <div className="absolute bottom-6 sm:bottom-12 left-6 sm:left-12 right-6 sm:right-12 space-y-2">
