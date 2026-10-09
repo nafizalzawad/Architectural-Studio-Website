@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigation } from '@/context/NavigationContext';
-import { ChevronLeft, ChevronRight, Maximize2, ArrowUpRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
 
 interface SlideItem {
   id: number;
@@ -160,8 +160,20 @@ export const SliderEngine: React.FC = () => {
   } = useNavigation();
 
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const totalSlides = slidesData.length;
-  const filmstripRef = useRef<HTMLDivElement>(null);
+  const progressTrackRef = useRef<HTMLDivElement>(null);
+  const wheelLockRef = useRef<number>(0);
+
+  // Responsive screen size detection for exact scale matching
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Navigate functions
   const nextSlide = useCallback(() => {
@@ -172,7 +184,7 @@ export const SliderEngine: React.FC = () => {
     setActiveSlideIndex((activeSlideIndex - 1 + totalSlides) % totalSlides);
   }, [activeSlideIndex, setActiveSlideIndex, totalSlides]);
 
-  // Autoplay timer: automatically advances to next carousel slide
+  // Autoplay countdown timer
   useEffect(() => {
     if (isOverviewMode || isPaused) return;
 
@@ -194,211 +206,307 @@ export const SliderEngine: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nextSlide, prevSlide]);
 
+  // Mouse wheel horizontal navigation in overview mode
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (!isOverviewMode) return;
+      const now = Date.now();
+      if (now - wheelLockRef.current < 450) return;
+
+      if (e.deltaY > 25 || e.deltaX > 25) {
+        wheelLockRef.current = now;
+        nextSlide();
+      } else if (e.deltaY < -25 || e.deltaX < -25) {
+        wheelLockRef.current = now;
+        prevSlide();
+      }
+    },
+    [isOverviewMode, nextSlide, prevSlide]
+  );
+
+  // Click on slide in overview mode: selects and smoothly zooms in
+  const handleSlideCardClick = (idx: number) => {
+    if (isOverviewMode) {
+      setActiveSlideIndex(idx);
+      setOverviewMode(false);
+    }
+  };
+
+  // Click on bottom timeline track to jump directly to any slide
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressTrackRef.current) return;
+    const rect = progressTrackRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const targetIdx = Math.floor(ratio * totalSlides);
+    setActiveSlideIndex(Math.min(totalSlides - 1, targetIdx));
+  };
+
   const current = slidesData[activeSlideIndex];
+  const targetScale = isOverviewMode ? (isMobile ? 0.52 : 0.42) : 1;
 
   return (
     <div
+      id="sliderNav"
+      onWheel={handleWheel}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative w-full h-screen overflow-hidden bg-[#1b1b1e] text-white select-none"
+      className="relative w-full h-screen overflow-hidden bg-[#161618] text-white select-none"
     >
-      {/* 1. FULLSCREEN SLIDE / PANORAMA VIEW */}
-      <AnimatePresence mode="wait">
-        {!isOverviewMode ? (
-          <motion.div
-            key={`slide-${current.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: [0.25, 1, 0.5, 1] }}
-            className="absolute inset-0 w-full h-full"
-          >
-            {/* Background Image with Ambient Smooth Scaling */}
-            <motion.div
-              initial={{ scale: 1 }}
-              animate={{ scale: 1.04 }}
-              transition={{ duration: 8, ease: 'easeOut' }}
-              className="absolute inset-0 w-full h-full"
-            >
-              <Image
-                src={current.imageUrl}
-                alt={current.heading}
-                fill
-                priority
-                sizes="100vw"
-                className="object-cover object-center filter contrast-[1.03]"
-              />
-              {/* Subtle ambient darkening to ensure crisp typography readability */}
-              <div className="absolute inset-0 bg-black/25" />
-            </motion.div>
+      {/* ================= 1. SECTION WRAP (Category indicator above active slide) ================= */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: isOverviewMode ? 1 : 0,
+          y: isOverviewMode ? 0 : -15,
+        }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute top-12 sm:top-14 md:top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+      >
+        <div className="flex items-center gap-3">
+          <span className="h-4 sm:h-5 w-[1.5px] bg-white/70 inline-block" />
+          <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white font-medium">
+            {current.section}
+          </span>
+        </div>
+      </motion.div>
 
-            {/* Captions HUD matching Reference Screenshot Layout */}
-            <div className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-8 sm:left-14 lg:left-20 z-20 max-w-2xl pointer-events-none">
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-3 sm:space-y-4"
+      {/* ================= 2. CONTINUOUS CAMERA TRACK (Zoom Out / In) ================= */}
+      <motion.div
+        className="w-full h-full relative"
+        initial={false}
+        animate={{
+          scale: targetScale,
+        }}
+        transition={{
+          duration: 1.15,
+          ease: [0.76, 0, 0.24, 1], // Smooth Cubic.easeInOut matching TweenMax
+        }}
+        style={{
+          transformOrigin: '50vw 45vh',
+        }}
+      >
+        {/* Continuous Horizontal Slides Track */}
+        <motion.div
+          className="flex h-full will-change-transform"
+          animate={{
+            x: `-${activeSlideIndex * 100}vw`,
+          }}
+          transition={{
+            duration: 0.85,
+            ease: [0.76, 0, 0.24, 1],
+          }}
+        >
+          {slidesData.map((slide, idx) => {
+            const isSelected = idx === activeSlideIndex;
+            return (
+              <div
+                key={slide.id}
+                onClick={() => handleSlideCardClick(idx)}
+                className={`w-[100vw] h-[100vh] shrink-0 relative flex flex-col justify-center items-center transition-all duration-500 ${
+                  isOverviewMode ? 'cursor-pointer group' : ''
+                }`}
               >
-                {/* Top Badge: [LONDON DESIGN STUDIO | ARCHITECTURE AND INTERIOR DESIGN STUDIO LONDON] */}
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                    {current.subtitle}
-                  </span>
-                  <span className="h-3 w-[1px] bg-white/40" />
-                  <span className="text-[10px] sm:text-[11px] font-light uppercase tracking-[0.16em] text-white/60">
-                    {current.seoTitle}
-                  </span>
+                {/* Image Container */}
+                <div
+                  className={`relative w-full h-full overflow-hidden transition-all duration-700 ${
+                    isOverviewMode
+                      ? isSelected
+                        ? 'ring-1 ring-white/60 shadow-2xl opacity-100'
+                        : 'opacity-40 group-hover:opacity-85'
+                      : 'opacity-100'
+                  }`}
+                >
+                  <Image
+                    src={slide.imageUrl}
+                    alt={slide.heading}
+                    fill
+                    priority={idx === 0 || isSelected}
+                    sizes="100vw"
+                    className="object-cover object-center filter contrast-[1.03]"
+                  />
+                  {/* Subtle darkening for editorial contrast */}
+                  <div
+                    className={`absolute inset-0 transition-colors duration-500 ${
+                      isOverviewMode
+                        ? isSelected
+                          ? 'bg-black/15'
+                          : 'bg-black/40 group-hover:bg-black/20'
+                        : 'bg-black/25'
+                    }`}
+                  />
                 </div>
 
-                {/* Primary Large Heading: [DESIGN MATTERS] */}
-                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.2rem] font-light uppercase tracking-tight text-white leading-none">
-                  {current.heading}
-                </h1>
-
-                {/* Narrative Paragraph */}
-                <p className="text-xs sm:text-sm md:text-base text-white/85 font-light leading-relaxed max-w-md pt-1">
-                  {current.description}
-                </p>
-
-                {/* Optional Ghost Button (hidden on slide 0 just like reference site) */}
-                {!current.noCta && current.ctaText && current.ctaLink && (
-                  <div className="pt-2 pointer-events-auto">
-                    <Link
-                      href={current.ctaLink}
-                      className="group inline-flex items-center gap-2.5 text-[11px] uppercase font-mono tracking-[0.25em] px-5 py-2.5 border border-white/40 bg-black/30 hover:bg-white hover:text-[#1b1b1e] transition-all duration-300"
-                    >
-                      <span>{current.ctaText}</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </Link>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          </motion.div>
-        ) : (
-          /* ================= 2.5D OVERVIEW / FILMSTRIP MODE ================= */
-          <motion.div
-            key="overview-mode"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-            className="absolute inset-0 z-30 bg-[#141416] flex flex-col justify-between p-8 sm:p-14 lg:p-20 overflow-hidden"
-          >
-            {/* Top Bar with Exit */}
-            <div className="flex items-center justify-between pb-6 border-b border-white/10">
-              <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-400">
-                Architectural Panorama // Index
-              </span>
-              <button
-                type="button"
-                onClick={() => setOverviewMode(false)}
-                className="group flex items-center gap-2 text-xs font-mono uppercase tracking-[0.25em] text-neutral-300 hover:text-white transition-colors cursor-pointer"
-              >
-                <span>Full View</span>
-                <Maximize2 className="w-4 h-4 stroke-1" />
-              </button>
-            </div>
-
-            {/* Panoramic Horizontal Ribbon */}
-            <div
-              ref={filmstripRef}
-              className="flex items-center gap-6 overflow-x-auto py-10 no-scrollbar scroll-smooth my-auto px-4"
-            >
-              {slidesData.map((s, idx) => {
-                const isActive = idx === activeSlideIndex;
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      setActiveSlideIndex(idx);
-                      setOverviewMode(false);
-                    }}
-                    className={`shrink-0 w-64 sm:w-80 cursor-pointer group transition-all duration-500 ${
-                      isActive
-                        ? 'scale-105 ring-2 ring-white opacity-100'
-                        : 'opacity-60 hover:opacity-100 hover:scale-100'
-                    }`}
-                  >
-                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-neutral-900 border border-white/15 mb-3">
-                      <Image
-                        src={s.imageUrl}
-                        alt={s.heading}
-                        fill
-                        sizes="320px"
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
-                      <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 text-[9px] font-mono uppercase tracking-wider text-white">
-                        {String(s.id + 1).padStart(2, '0')}
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 block">
-                        {s.subtitle}
-                      </span>
-                      <h4 className="text-sm font-light uppercase tracking-wide text-white group-hover:text-neutral-200">
-                        {s.heading}
-                      </h4>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom Scrubber */}
-            <div className="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400 font-mono">
-              <span>{String(activeSlideIndex + 1).padStart(2, '0')} / {String(totalSlides).padStart(2, '0')}</span>
-              <div className="w-48 sm:w-64 h-1 bg-white/20 relative rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white transition-all duration-300"
-                  style={{ width: `${((activeSlideIndex + 1) / totalSlides) * 100}%` }}
-                />
+                {/* .append Label directly underneath each miniature slide */}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    opacity: isOverviewMode ? (isSelected ? 1 : 0.35) : 0,
+                    y: isOverviewMode ? 0 : 20,
+                  }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                  className="absolute -bottom-24 sm:-bottom-28 w-full text-center pointer-events-none select-none px-4"
+                >
+                  <p className="text-sm sm:text-base font-light uppercase tracking-[0.25em] text-white">
+                    {slide.heading}
+                  </p>
+                  <span className="text-[10px] sm:text-xs font-light uppercase tracking-[0.25em] text-white/50 mt-1 block">
+                    {slide.subtitle}
+                  </span>
+                </motion.div>
               </div>
-              <span className="text-[10px] uppercase tracking-wider">Click slide to enter</span>
+            );
+          })}
+        </motion.div>
+      </motion.div>
+
+      {/* ================= 3. CAPTIONS HUD (Overlay bottom-left, visible in full mode) ================= */}
+      <AnimatePresence>
+        {!isOverviewMode && (
+          <motion.div
+            key={`caption-${current.id}`}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10, transition: { duration: 0.25 } }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-8 sm:left-14 lg:left-20 z-20 max-w-2xl pointer-events-none"
+          >
+            <div className="space-y-3 sm:space-y-4">
+              {/* Top Subtitle Badge */}
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                  {current.subtitle}
+                </span>
+                <span className="h-3 w-[1px] bg-white/40" />
+                <span className="text-[10px] sm:text-[11px] font-light uppercase tracking-[0.16em] text-white/60">
+                  {current.seoTitle}
+                </span>
+              </div>
+
+              {/* Main Editorial Heading */}
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.2rem] font-light uppercase tracking-tight text-white leading-none">
+                {current.heading}
+              </h1>
+
+              {/* Narrative Paragraph */}
+              <p className="text-xs sm:text-sm md:text-base text-white/85 font-light leading-relaxed max-w-md pt-1">
+                {current.description}
+              </p>
+
+              {/* Ghost CTA Button */}
+              {!current.noCta && current.ctaText && current.ctaLink && (
+                <div className="pt-2 pointer-events-auto">
+                  <Link
+                    href={current.ctaLink}
+                    className="group inline-flex items-center gap-2.5 text-[11px] uppercase font-mono tracking-[0.25em] px-5 py-2.5 border border-white/40 bg-black/30 hover:bg-white hover:text-[#1b1b1e] transition-all duration-300"
+                  >
+                    <span>{current.ctaText}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. MINIMALIST EDGE ARROWS MATCHING SCREENSHOT */}
-      {!isOverviewMode && (
-        <>
-          {/* Left Arrow (<) */}
-          <button
-            type="button"
-            onClick={prevSlide}
-            className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2 z-30 p-3 text-white/50 hover:text-white transition-all hover:-translate-x-1 focus:outline-none cursor-pointer"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
-          </button>
+      {/* ================= 4. OVERVIEW MODE BOTTOM PROGRESS SCRUBBER ================= */}
+      <motion.div
+        initial={false}
+        animate={{
+          opacity: isOverviewMode ? 1 : 0,
+          y: isOverviewMode ? 0 : 20,
+          pointerEvents: isOverviewMode ? 'auto' : 'none',
+        }}
+        transition={{ duration: 0.45 }}
+        className="absolute bottom-10 sm:bottom-14 left-0 right-0 px-8 sm:px-16 lg:px-28 z-30 flex flex-col items-center gap-3"
+      >
+        {/* Scrubber Track */}
+        <div
+          ref={progressTrackRef}
+          onClick={handleProgressClick}
+          className="relative w-full h-8 flex items-center cursor-pointer group"
+        >
+          {/* Subtle 1px Rail */}
+          <div className="w-full h-[1px] bg-white/20 group-hover:bg-white/35 transition-colors" />
 
-          {/* Right Arrow (>) matching exact arrow in screenshot */}
-          <button
-            type="button"
-            onClick={nextSlide}
-            className="absolute right-6 sm:right-10 top-1/2 -translate-y-1/2 z-30 p-3 text-white/70 hover:text-white transition-all hover:translate-x-1 focus:outline-none cursor-pointer"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5]" />
-          </button>
-        </>
-      )}
+          {/* White Active Scrubber Bar Indicator */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 h-[3px] bg-white transition-all duration-300"
+            style={{
+              width: `${100 / totalSlides}%`,
+              left: `${(activeSlideIndex / totalSlides) * 100}%`,
+            }}
+          />
+        </div>
 
-      {/* 3. SUBTLE PROGRESS TIMER BAR AT BOTTOM */}
+        {/* Informational Subline */}
+        <div className="flex items-center justify-between w-full text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white/50">
+          <span>
+            {String(activeSlideIndex + 1).padStart(2, '0')} / {String(totalSlides).padStart(2, '0')}
+          </span>
+          <span className="hidden sm:inline">Click project or toggle [ ] to enter</span>
+          <span className="truncate max-w-[150px] sm:max-w-none">{current.heading}</span>
+        </div>
+      </motion.div>
+
+      {/* ================= 5. INTERACTIVE EDGE HIT-AREAS & ARROWS ================= */}
+      {/* Left Hit-Area */}
+      <button
+        type="button"
+        onClick={prevSlide}
+        className={`absolute left-0 top-0 bottom-0 z-20 focus:outline-none flex items-center transition-all ${
+          isOverviewMode
+            ? 'w-16 sm:w-24 px-4 hover:bg-black/10'
+            : 'w-20 sm:w-28 px-6 sm:px-10 group'
+        }`}
+        aria-label="Previous slide"
+      >
+        <span
+          className={`p-2 rounded-full text-white/40 hover:text-white transition-all ${
+            isOverviewMode
+              ? 'opacity-80 hover:opacity-100 hover:-translate-x-1'
+              : 'opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0'
+          }`}
+        >
+          <ChevronLeft className="w-6 h-6 stroke-[1.5]" />
+        </span>
+      </button>
+
+      {/* Right Hit-Area */}
+      <button
+        type="button"
+        onClick={nextSlide}
+        className={`absolute right-0 top-0 bottom-0 z-20 focus:outline-none flex items-center justify-end transition-all ${
+          isOverviewMode
+            ? 'w-16 sm:w-24 px-4 hover:bg-black/10'
+            : 'w-20 sm:w-28 px-6 sm:px-10 group'
+        }`}
+        aria-label="Next slide"
+      >
+        <span
+          className={`p-2 rounded-full text-white/40 hover:text-white transition-all ${
+            isOverviewMode
+              ? 'opacity-80 hover:opacity-100 hover:translate-x-1'
+              : 'opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0'
+          }`}
+        >
+          <ChevronRight className="w-6 h-6 stroke-[1.5]" />
+        </span>
+      </button>
+
+      {/* ================= 6. SUBTLE AUTOPLAY TIMER LINE AT BOTTOM ================= */}
       {!isOverviewMode && (
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-20">
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-20 pointer-events-none">
           <motion.div
             key={current.id}
             initial={{ width: '0%' }}
-            animate={{ width: '100%' }}
+            animate={{ width: isPaused ? undefined : '100%' }}
             transition={{
               duration: AUTOPLAY_INTERVAL_MS / 1000,
               ease: 'linear',
             }}
-            className="h-full bg-white/75"
+            className="h-full bg-white/70"
           />
         </div>
       )}
