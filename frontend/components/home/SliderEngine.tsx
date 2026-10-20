@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigation } from '@/context/NavigationContext';
-import { ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpRight, Volume2, VolumeX } from 'lucide-react';
 
-interface SlideItem {
+export interface SlideItem {
   id: number;
   section: string;
   subtitle: string;
@@ -17,139 +16,90 @@ interface SlideItem {
   ctaText?: string;
   ctaLink?: string;
   noCta?: boolean;
-  imageUrl: string;
+  videoUrl: string;
+  posterUrl: string;
 }
 
-const slidesData: SlideItem[] = [
+export const slidesData: SlideItem[] = [
   {
     id: 0,
     section: 'Studio',
-    subtitle: 'LONDON DESIGN STUDIO',
-    seoTitle: 'ARCHITECTURE AND INTERIOR DESIGN STUDIO LONDON',
+    subtitle: 'M. A. WAKEEL KHAN & ASSOCIATES',
+    seoTitle: 'AN ARCHITECTURAL CONSULTANCY FIRM',
     heading: 'DESIGN MATTERS',
     description:
-      'Minale + Mann is an award winning architectural and interior design studio based in London.',
+      'M. A. WAKEEL KHAN & ASSOCIATES IS AN ARCHITECTURE & INTERIOR DESIGN STUDIO BASED IN DHAKA, BANGLADESH',
     noCta: true,
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/04/1-13.jpg',
+    videoUrl: '/videos/slide-1.mp4',
+    posterUrl: '/images/slides/slide-1.jpg',
   },
   {
     id: 1,
-    section: 'Services',
+    section: 'Residential',
     subtitle: 'RESIDENTIAL',
-    seoTitle: 'RESIDENTIAL ARCHITECTS LONDON',
+    seoTitle: 'RESIDENTIAL ARCHITECTS',
     heading: 'ARCHITECTURAL DESIGN',
-    description: 'The most important material with which we design, is light.',
-    ctaText: 'Read More',
+    description: 'THE MOST IMPORTANT ELEMENTS ARE THE NATURAL ONES',
+    ctaText: 'READ MORE',
     ctaLink: '/services/architectural-design?sector=residential',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/slide_02-1600x1068.jpg',
+    videoUrl: '/videos/slide-2.mp4',
+    posterUrl: '/images/slides/slide-2.jpg',
   },
   {
     id: 2,
-    section: 'Services',
+    section: 'Commercial',
     subtitle: 'COMMERCIAL',
     seoTitle: 'COMMERCIAL ARCHITECTS',
     heading: 'ARCHITECTURAL DESIGN',
     description:
-      'Design is about a way of living, be it at home, in the workplace, relaxing, or entertaining. It is our duty as designers to enhance and encourage social interaction through good design.',
-    ctaText: 'Read More',
+      'SHAPING RESPONSIVE ENVIRONMENTS WHERE MATERIALS, CONTEXT AND HUMAN MOVEMENT REMAIN IN CONSTANT DIALOGUE—CREATING MEANINGFUL SPACES THAT EVOLVE WITH PEOPLE, PLACE AND NATURE.',
+    ctaText: 'READ MORE',
     ctaLink: '/services/architectural-design?sector=commercial',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/04/1-New-Size-11.jpg',
+    videoUrl: '/videos/slide-3.mp4',
+    posterUrl: '/images/slides/slide-3.jpg',
   },
   {
     id: 3,
-    section: 'Services',
-    subtitle: 'RESIDENTIAL',
-    seoTitle: 'PLANNING APPLICATIONS',
-    heading: 'PLANNING APPLICATIONS',
+    section: 'Industrial',
+    subtitle: 'INDUSTRIAL',
+    seoTitle: 'INDUSTRIAL ARCHITECTS',
+    heading: 'ARCHITECTURAL DESIGN',
     description:
-      'Securing statutory planning consents and listed building permissions with a 95%+ success rate across prime London boroughs.',
-    ctaText: 'Read More',
-    ctaLink: '/services/planning-applications',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/02/6.-Planning-Archway-img-10.jpg',
+      'GREENS, WATER FEATURES, SHADED SPACES AND LANDSCAPED TERRACES SOFTEN THE BUILT ENVIRONMENT WHILE SUPPORTING BIO-DIVERSITY AND IMPROVING THE MICROCLIMATE.',
+    ctaText: 'READ MORE',
+    ctaLink: '/services/architectural-design?sector=industrial',
+    videoUrl: '/videos/slide-4.mp4',
+    posterUrl: '/images/slides/slide-4.jpg',
   },
   {
     id: 4,
-    section: 'Services',
-    subtitle: 'RESIDENTIAL',
-    seoTitle: 'RESIDENTIAL INTERIOR DESIGN LONDON',
-    heading: 'INTERIOR DESIGN',
-    description: 'We aspire to create an interior experience that is both memorable, and timeless.',
-    ctaText: 'Read More',
-    ctaLink: '/services/interior-design?sector=residential',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/slide_05-1600x887.jpg',
+    section: 'Government Institution',
+    subtitle: 'GOVERNMENT INSTITUTION',
+    seoTitle: 'INSTITUTIONAL ARCHITECTS',
+    heading: 'ARCHITECTURAL DESIGN',
+    description:
+      'SUSTAINABLE MATERIALS AND GREEN-FOCUSED APPROACH ENSURE LONG-TERM STABILITY AND FUNCTION-MAKING IT A SAFE AND VIBRANT HUB THAT RESPECTS NATURE\'S LIMITS FOR GENERATIONS TO COME.',
+    ctaText: 'READ MORE',
+    ctaLink: '/services/architectural-design?sector=institutional',
+    videoUrl: '/videos/slide-5.mp4',
+    posterUrl: '/images/slides/slide-5.jpg',
   },
   {
     id: 5,
-    section: 'Services',
-    subtitle: 'COMMERCIAL',
-    seoTitle: 'COMMERCIAL INTERIOR DESIGNERS',
+    section: 'Residence Interior',
+    subtitle: 'RESIDENCE INTERIOR',
+    seoTitle: 'RESIDENTIAL INTERIOR ARCHITECTS',
     heading: 'INTERIOR DESIGN',
     description:
-      'As architects and designers it is important to focus on the experience of the space we find ourselves, as much as it is concerned with the aesthetic.',
-    ctaText: 'Read More',
-    ctaLink: '/services/interior-design?sector=commercial',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/04/1-New-Size-15.jpg',
-  },
-  {
-    id: 6,
-    section: 'Services',
-    subtitle: 'RESIDENTIAL',
-    seoTitle: 'CONSERVATION ARCHITECTS LONDON',
-    heading: 'CONSERVATION & HERITAGE DESIGN',
-    description: 'Conservation Architects to transform your heritage property.',
-    ctaText: 'Read More',
-    ctaLink: '/services/conservation-heritage',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/slide_07-1600x1069.jpg',
-  },
-  {
-    id: 7,
-    section: 'Services',
-    subtitle: 'RESIDENTIAL',
-    seoTitle: 'RESIDENTIAL ARCHITECTURAL DESIGN SERVICES',
-    heading: 'CREATE & CONSTRUCT',
-    description:
-      'Whether a new build project, or transforming a home through renovation or refurbishment; we take the ordinary and elevate to the extraordinary.',
-    ctaText: 'Read More',
-    ctaLink: '/services/create-construct?sector=residential',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/slide_08-1600x1068.jpg',
-  },
-  {
-    id: 8,
-    section: 'Services',
-    subtitle: 'COMMERCIAL',
-    seoTitle: 'COMMERCIAL DESIGN AND BUILD COMPANY',
-    heading: 'CREATE & CONSTRUCT',
-    description: 'Turnkey design and construction management governed by architectural precision.',
-    ctaText: 'Read More',
-    ctaLink: '/services/create-construct?sector=commercial',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/04/6-New-Size.jpg',
-  },
-  {
-    id: 9,
-    section: 'About',
-    subtitle: 'ABOUT',
-    seoTitle: 'ARCHITECTURE AND INTERIOR DESIGN STUDIO',
-    heading: 'MINALE + MANN',
-    description: "At Minale + Mann we believe that 'Design Matters'.",
-    ctaText: 'Read More',
-    ctaLink: '/about',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/slide_10-810x1080.jpg',
-  },
-  {
-    id: 10,
-    section: 'Contact',
-    subtitle: 'CONTACT',
-    seoTitle: 'CONTACT LONDON STUDIO',
-    heading: 'CONTACT',
-    description:
-      'Contact us and let us know about your project, or find out more about our award winning services.',
-    ctaText: 'Get in touch',
-    ctaLink: '/contact',
-    imageUrl: 'https://minaleandmann.com/wp-content/uploads/2018/05/9-2.jpg',
+      'INTERIOR DESIGN DOES NOT REFER TO \'WHAT TO DO\'-IT ONLY SUGGESTS \'WHAT NOT TO DO\'.',
+    ctaText: 'READ MORE',
+    ctaLink: '/services/interior-design?sector=residential',
+    videoUrl: '/videos/slide-6.mp4',
+    posterUrl: '/images/slides/slide-6.jpg',
   },
 ];
 
-const AUTOPLAY_INTERVAL_MS = 6500; // 6.5 seconds per slide
+const AUTOPLAY_INTERVAL_MS = 8000; // 8 seconds per slide matching video duration
 
 export const SliderEngine: React.FC = () => {
   const {
@@ -157,6 +107,8 @@ export const SliderEngine: React.FC = () => {
     setOverviewMode,
     activeSlideIndex,
     setActiveSlideIndex,
+    isSoundMuted,
+    toggleSound,
   } = useNavigation();
 
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -164,6 +116,7 @@ export const SliderEngine: React.FC = () => {
   const totalSlides = slidesData.length;
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const wheelLockRef = useRef<number>(0);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   // Responsive screen size detection for exact scale matching
   useEffect(() => {
@@ -194,6 +147,58 @@ export const SliderEngine: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [nextSlide, isOverviewMode, isPaused]);
+
+  // Synchronized Video & Sound Management
+  useEffect(() => {
+    videoRefs.current.forEach((video, idx) => {
+      if (!video) return;
+
+      if (idx === activeSlideIndex && !isOverviewMode) {
+        // Active slide in full view mode
+        video.muted = isSoundMuted;
+        video.volume = 1.0;
+
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // If browser blocked unmuted autoplay, fall back to muted autoplay
+            if (!video.muted) {
+              video.muted = true;
+              video.play().catch(() => {});
+            }
+          });
+        }
+      } else {
+        // Inactive slide or in overview mode
+        video.pause();
+        video.muted = true;
+        if (!isOverviewMode) {
+          video.currentTime = 0;
+        }
+      }
+    });
+  }, [activeSlideIndex, isOverviewMode, isSoundMuted]);
+
+  // First interaction listener to unlock unmuted audio if initially restricted
+  useEffect(() => {
+    const unlockAudio = () => {
+      const activeVideo = videoRefs.current[activeSlideIndex];
+      if (activeVideo && !isSoundMuted && !isOverviewMode) {
+        activeVideo.muted = false;
+        activeVideo.play().catch(() => {});
+      }
+    };
+
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, [activeSlideIndex, isSoundMuted, isOverviewMode]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -251,7 +256,7 @@ export const SliderEngine: React.FC = () => {
       onWheel={handleWheel}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative w-full h-screen overflow-hidden bg-[#161618] text-white select-none"
+      className="relative w-full h-screen overflow-hidden bg-[#141416] text-white select-none"
     >
       {/* ================= 1. SECTION WRAP (Category indicator above active slide) ================= */}
       <motion.div
@@ -280,7 +285,7 @@ export const SliderEngine: React.FC = () => {
         }}
         transition={{
           duration: 1.15,
-          ease: [0.76, 0, 0.24, 1], // Smooth Cubic.easeInOut matching TweenMax
+          ease: [0.76, 0, 0.24, 1], // Smooth Cubic.easeInOut
         }}
         style={{
           transformOrigin: '50vw 45vh',
@@ -307,52 +312,44 @@ export const SliderEngine: React.FC = () => {
                   isOverviewMode ? 'cursor-pointer group' : ''
                 }`}
               >
-                {/* Image Container with Ambient Slow Zoom and Overview Border */}
+                {/* Media Container with Video Playback and Overview Border */}
                 <div
                   className={`relative w-full h-full overflow-hidden transition-all duration-700 ${
                     isOverviewMode
                       ? isSelected
-                        ? 'ring-1 ring-white/60 shadow-2xl opacity-100'
-                        : 'opacity-40 group-hover:opacity-85'
+                        ? 'ring-1 ring-white/70 shadow-2xl opacity-100 scale-100'
+                        : 'opacity-40 group-hover:opacity-85 scale-95 group-hover:scale-100'
                       : 'opacity-100'
                   }`}
                 >
-                  {/* Ambient Ken Burns Slow Zoom */}
-                  <motion.div
-                    key={isSelected && !isOverviewMode ? `kenburns-${idx}` : `idle-${idx}`}
-                    initial={{ scale: 1 }}
-                    animate={{ scale: isSelected && !isOverviewMode ? 1.06 : 1 }}
-                    transition={{
-                      duration: isSelected && !isOverviewMode ? 9 : 0.6,
-                      ease: 'easeOut',
-                    }}
-                    className={`relative w-full h-full will-change-transform ${
-                      isOverviewMode ? 'transition-transform duration-500 group-hover:scale-105' : ''
-                    }`}
-                  >
-                    <Image
-                      src={slide.imageUrl}
-                      alt={slide.heading}
-                      fill
-                      priority={idx === 0 || isSelected}
-                      sizes="100vw"
-                      className="object-cover object-center filter contrast-[1.03]"
+                  <div className="relative w-full h-full">
+                    <video
+                      ref={(el) => {
+                        videoRefs.current[idx] = el;
+                      }}
+                      src={slide.videoUrl}
+                      poster={slide.posterUrl}
+                      playsInline
+                      loop
+                      muted={isSoundMuted || isOverviewMode || !isSelected}
+                      preload={idx === 0 || idx === activeSlideIndex ? 'auto' : 'metadata'}
+                      className="w-full h-full object-cover object-center filter contrast-[1.03]"
                     />
-                  </motion.div>
+                  </div>
 
                   {/* Subtle darkening for editorial contrast */}
                   <div
                     className={`absolute inset-0 transition-colors duration-500 pointer-events-none ${
                       isOverviewMode
                         ? isSelected
-                          ? 'bg-black/15'
-                          : 'bg-black/40 group-hover:bg-black/20'
-                        : 'bg-black/25'
+                          ? 'bg-black/10'
+                          : 'bg-black/40 group-hover:bg-black/15'
+                        : 'bg-gradient-to-t from-black/60 via-transparent to-black/30'
                     }`}
                   />
                 </div>
 
-                {/* .append Label directly underneath each miniature slide */}
+                {/* .append Label directly underneath each miniature slide in Overview Mode */}
                 <motion.div
                   initial={false}
                   animate={{
@@ -384,27 +381,27 @@ export const SliderEngine: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10, transition: { duration: 0.25 } }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-8 sm:left-14 lg:left-20 z-20 max-w-2xl pointer-events-none"
+            className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-8 sm:left-14 lg:left-20 z-20 max-w-3xl pointer-events-none pr-8"
           >
             <div className="space-y-3 sm:space-y-4">
               {/* Top Subtitle Badge */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
                 <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-white">
                   {current.subtitle}
                 </span>
                 <span className="h-3 w-[1px] bg-white/40" />
-                <span className="text-[10px] sm:text-[11px] font-light uppercase tracking-[0.16em] text-white/60">
+                <span className="text-[10px] sm:text-[11px] font-light uppercase tracking-[0.16em] text-white/70">
                   {current.seoTitle}
                 </span>
               </div>
 
               {/* Main Editorial Heading */}
-              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.2rem] font-light uppercase tracking-tight text-white leading-none">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] font-light uppercase tracking-tight text-white leading-none">
                 {current.heading}
               </h1>
 
               {/* Narrative Paragraph */}
-              <p className="text-xs sm:text-sm md:text-base text-white/85 font-light leading-relaxed max-w-md pt-1">
+              <p className="text-xs sm:text-sm md:text-[15px] text-white/90 font-light leading-relaxed max-w-xl pt-1 uppercase">
                 {current.description}
               </p>
 
@@ -413,7 +410,7 @@ export const SliderEngine: React.FC = () => {
                 <div className="pt-2 pointer-events-auto">
                   <Link
                     href={current.ctaLink}
-                    className="group inline-flex items-center gap-2.5 text-[11px] uppercase font-mono tracking-[0.25em] px-5 py-2.5 border border-white/40 bg-black/30 hover:bg-white hover:text-[#1b1b1e] transition-all duration-300"
+                    className="group inline-flex items-center gap-2.5 text-[11px] uppercase font-mono tracking-[0.25em] px-5 py-2.5 border border-white/50 bg-black/40 backdrop-blur-sm hover:bg-white hover:text-[#1b1b1e] transition-all duration-300"
                   >
                     <span>{current.ctaText}</span>
                     <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -424,6 +421,28 @@ export const SliderEngine: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Ambient Sound Controller (Bottom-Right HUD) */}
+      {!isOverviewMode && (
+        <div className="absolute bottom-16 sm:bottom-20 lg:bottom-24 right-8 sm:right-14 lg:right-20 z-20 pointer-events-auto">
+          <button
+            type="button"
+            onClick={toggleSound}
+            className="flex items-center gap-2.5 px-4 py-2 border border-white/30 bg-black/40 backdrop-blur-md rounded-full text-white/80 hover:text-white hover:border-white transition-all duration-300 cursor-pointer shadow-lg hover:scale-105"
+            title={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
+            aria-label={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
+          >
+            {isSoundMuted ? (
+              <VolumeX className="w-4 h-4 stroke-[1.5] text-white/60" />
+            ) : (
+              <Volume2 className="w-4 h-4 stroke-[1.5] text-white animate-pulse" />
+            )}
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em]">
+              {isSoundMuted ? 'Sound Off' : 'Sound On'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ================= 4. OVERVIEW MODE BOTTOM PROGRESS SCRUBBER ================= */}
       <motion.div
@@ -514,7 +533,7 @@ export const SliderEngine: React.FC = () => {
       {!isOverviewMode && (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-20 pointer-events-none">
           <motion.div
-            key={current.id}
+            key={`${current.id}-${activeSlideIndex}`}
             initial={{ width: '0%' }}
             animate={{ width: isPaused ? undefined : '100%' }}
             transition={{

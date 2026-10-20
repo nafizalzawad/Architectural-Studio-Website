@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigation } from '@/context/NavigationContext';
 import { X, ChevronRight, Award, ArrowUpRight } from 'lucide-react';
@@ -48,14 +49,15 @@ export const NavigationDrawer: React.FC = () => {
           >
             {/* Top Bar with Logo & Close Button */}
             <div className="flex items-center justify-between pb-8 border-b border-white/10">
-              <Link href="/" onClick={closeMenu} className="focus:outline-none">
-                <svg
-                  viewBox="0 0 269 95.6"
-                  className="w-32 sm:w-40 h-auto fill-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <polygon points="269,94.5 237.4,0 237.4,0 221.6,0 221.6,0 197.8,71 174,0 174,0 158.3,0 158.3,0 134.5,71 110.7,0 110.7,0 95,0 95,0 71.2,71 47.4,0 47.4,0 31.7,0 31.7,0 0,94.5 15.7,94.5 39.5,23.4 63.3,94.5 63.4,94.5 79.1,94.5 79.1,94.5 102.9,23.4 126.7,94.5 126.7,94.5 142.4,94.5 142.4,94.5 166.2,23.4 190,94.5 190,94.5 205.7,94.5 205.7,94.5 229.5,23.4 253.3,94.5" />
-                </svg>
+              <Link href="/" onClick={closeMenu} className="focus:outline-none flex items-center">
+                <Image
+                  src="/images/mawk-logo-white.png"
+                  alt="M. A. Wakeel Khan & Associates"
+                  width={64}
+                  height={64}
+                  priority
+                  className="w-12 sm:w-16 h-auto object-contain"
+                />
               </Link>
 
               <button
@@ -342,7 +344,7 @@ export const NavigationDrawer: React.FC = () => {
                 </a>
                 <span className="text-neutral-600">&bull;</span>
                 <span className="text-[10px] font-mono tracking-wider text-neutral-500">
-                  Battersea, London SW8
+                  Dhaka, Bangladesh
                 </span>
               </div>
             </div>

@@ -33,6 +33,11 @@ interface NavigationContextType {
   // Active slide index across slider engine
   activeSlideIndex: number;
   setActiveSlideIndex: (index: number) => void;
+
+  // Sound Engine
+  isSoundMuted: boolean;
+  toggleSound: () => void;
+  setSoundMuted: (muted: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -44,6 +49,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [activeProjectTicker, setActiveProjectTicker] = useState<string>('');
   const [isOverviewMode, setIsOverviewMode] = useState<boolean>(false);
   const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
+  const [isSoundMuted, setIsSoundMuted] = useState<boolean>(false);
 
   const toggleOpen = () => setIsOpen((prev) => !prev);
   const openMenu = () => setIsOpen(true);
@@ -55,6 +61,9 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const toggleOverviewMode = () => setIsOverviewMode((prev) => !prev);
   const setOverviewMode = (mode: boolean) => setIsOverviewMode(mode);
+
+  const toggleSound = () => setIsSoundMuted((prev) => !prev);
+  const setSoundMuted = (muted: boolean) => setIsSoundMuted(muted);
 
   // Prevent background scrolling when either menu or quick inquiry drawer is open
   useEffect(() => {
@@ -99,6 +108,9 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setOverviewMode,
         activeSlideIndex,
         setActiveSlideIndex,
+        isSoundMuted,
+        toggleSound,
+        setSoundMuted,
       }}
     >
       {children}

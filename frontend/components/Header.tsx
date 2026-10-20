@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useNavigation } from '@/context/NavigationContext';
 
@@ -12,6 +13,8 @@ export const Header: React.FC = () => {
     headerTheme,
     isOverviewMode,
     toggleOverviewMode,
+    isSoundMuted,
+    toggleSound,
   } = useNavigation();
 
   const pathname = usePathname();
@@ -43,23 +46,60 @@ export const Header: React.FC = () => {
       }`}
     >
       <div className="w-full px-8 sm:px-14 lg:px-20 flex items-center justify-between pointer-events-auto">
-        {/* Left: Authentic Minale + Mann Geometric Vector Monogram */}
+        {/* Left: Authentic M. A. Wakeel Khan & Associates (MAWK) Logo Monogram */}
         <Link
           href="/"
-          className="group flex items-center focus:outline-none transition-opacity hover:opacity-80"
-          aria-label="Minale + Mann"
+          className="group flex items-center focus:outline-none transition-opacity hover:opacity-85"
+          aria-label="M. A. Wakeel Khan & Associates"
         >
-          <svg
-            viewBox="0 0 269 95.6"
-            className={`w-14 sm:w-16 md:w-20 h-auto ${logoFill} transition-all duration-300`}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <polygon points="269,94.5 237.4,0 237.4,0 221.6,0 221.6,0 197.8,71 174,0 174,0 158.3,0 158.3,0 134.5,71 110.7,0 110.7,0 95,0 95,0 71.2,71 47.4,0 47.4,0 31.7,0 31.7,0 0,94.5 15.7,94.5 39.5,23.4 63.3,94.5 63.4,94.5 79.1,94.5 79.1,94.5 102.9,23.4 126.7,94.5 126.7,94.5 142.4,94.5 142.4,94.5 166.2,23.4 190,94.5 190,94.5 205.7,94.5 205.7,94.5 229.5,23.4 253.3,94.5" />
-          </svg>
+          <Image
+            src={isDarkText ? '/images/mawk-logo-dark.png' : '/images/mawk-logo-white.png'}
+            alt="M. A. Wakeel Khan & Associates"
+            width={84}
+            height={84}
+            priority
+            className="w-14 sm:w-16 md:w-20 h-auto object-contain transition-all duration-300"
+          />
         </Link>
 
-        {/* Right: Exactly Two Minimalist Icons matching Reference Screenshot */}
-        <div className="flex items-center gap-6 sm:gap-7">
+        {/* Right: Sound Controller, Overview View-Toggle Icon, Minimalist Hamburger */}
+        <div className="flex items-center gap-5 sm:gap-7">
+          {/* Audio Sound Toggle with Animated Architectural Equalizer */}
+          {isHomepage && (
+            <button
+              type="button"
+              onClick={toggleSound}
+              className="p-1 focus:outline-none transition-all duration-300 hover:scale-105 group cursor-pointer flex items-center gap-2"
+              title={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
+              aria-label={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
+            >
+              <div className="flex items-end gap-[2px] h-3.5">
+                <span
+                  className={`w-[1.5px] ${isDarkText ? 'bg-[#1b1b1e]' : 'bg-white'} rounded-full transition-all duration-300 ${
+                    isSoundMuted ? 'h-1 opacity-30' : 'h-3 animate-pulse'
+                  }`}
+                />
+                <span
+                  className={`w-[1.5px] ${isDarkText ? 'bg-[#1b1b1e]' : 'bg-white'} rounded-full transition-all duration-300 ${
+                    isSoundMuted ? 'h-1 opacity-30' : 'h-3.5 animate-pulse [animation-delay:150ms]'
+                  }`}
+                />
+                <span
+                  className={`w-[1.5px] ${isDarkText ? 'bg-[#1b1b1e]' : 'bg-white'} rounded-full transition-all duration-300 ${
+                    isSoundMuted ? 'h-1 opacity-30' : 'h-2 animate-pulse [animation-delay:300ms]'
+                  }`}
+                />
+              </div>
+              <span
+                className={`text-[9px] sm:text-[10px] font-mono tracking-[0.2em] uppercase transition-colors ${
+                  isDarkText ? 'text-[#1b1b1e]' : 'text-white'
+                } ${isSoundMuted ? 'opacity-40 group-hover:opacity-80' : 'opacity-85 group-hover:opacity-100'} hidden sm:inline`}
+              >
+                {isSoundMuted ? 'Muted' : 'Sound'}
+              </span>
+            </button>
+          )}
+
           {/* 1. Rectangular View-Toggle Icon [   ] */}
           {isHomepage && (
             <button

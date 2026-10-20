@@ -18,12 +18,10 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pb-16 border-b border-white/10">
           <div className="lg:col-span-6 space-y-4">
             <span className="text-base sm:text-lg font-light tracking-[0.28em] uppercase text-white block">
-              Minale + Mann
+              M. A. Wakeel Khan & Associates
             </span>
             <p className="text-xs sm:text-sm text-neutral-400 font-light leading-relaxed max-w-md">
-              A bespoke architectural, interior design, and construction practice based in London.
-              We shape distinctive spaces from inception to turn-key completion with uncompromising
-              craftsmanship and rigorous architectural precision.
+              An architectural consultancy firm based in Dhaka, Bangladesh. We shape distinctive spaces from inception to turn-key completion with uncompromising craftsmanship and rigorous architectural precision.
             </p>
           </div>
 
@@ -89,25 +87,16 @@ export const Footer: React.FC = () => {
               {/* Studio Headquarters */}
             <div className="col-span-2 sm:col-span-1">
               <h4 className="text-[11px] font-mono uppercase tracking-[0.25em] text-neutral-500 mb-4">
-                London Studio
+                Dhaka Studio
               </h4>
               <address className="not-italic text-xs font-light text-neutral-400 space-y-1.5 leading-relaxed">
-                <p>Archway 69, 324 Queenstown Rd</p>
-                <p>Battersea, London SW8 4LT</p>
+                <p>Dhaka, Bangladesh</p>
                 <p className="pt-2">
                   <a
-                    href="tel:02039586074"
+                    href="mailto:info@mawk.com.bd"
                     className="hover:text-white transition-colors block text-neutral-300"
                   >
-                    020 3958 6074
-                  </a>
-                </p>
-                <p>
-                  <a
-                    href="mailto:generalenquiries@minaleandmann.com"
-                    className="hover:text-white transition-colors block text-neutral-300"
-                  >
-                    generalenquiries@minaleandmann.com
+                    info@mawk.com.bd
                   </a>
                 </p>
               </address>
@@ -118,7 +107,7 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar: Copyright, Privacy Policy, and Socials */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-light text-neutral-500">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center sm:text-left">
-            <span>&copy; {currentYear} Minale + Mann. All rights reserved.</span>
+            <span>&copy; {currentYear} M. A. Wakeel Khan & Associates. All rights reserved.</span>
             <div className="flex items-center gap-4 text-neutral-400">
               <Link href="/privacy-policy" className="hover:text-white transition-colors">
                 Privacy Policy

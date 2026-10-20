@@ -16,18 +16,25 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Architecture and Interior Design Studio London | Minale + Mann',
+  title: 'M. A. Wakeel Khan & Associates | Architectural Consultancy Firm',
   description:
-    'Minale + Mann is an architecture and interior design studio in London, specialising in bespoke interior design and architectural services.',
+    'M. A. Wakeel Khan & Associates is an architectural and interior design studio based in Dhaka, Bangladesh, specialising in residential, commercial, industrial, institutional, and bespoke interior design.',
   keywords: [
-    'Minale + Mann',
-    'Architects London',
-    'Bespoke Architecture',
-    'Luxury Interior Design',
-    'Heritage Conservation',
-    'Battersea Architects',
+    'M. A. Wakeel Khan & Associates',
+    'MAWK',
+    'Architects Dhaka',
+    'Architectural Consultancy Firm',
+    'Architecture Bangladesh',
+    'Interior Design Dhaka',
+    'Residential Architects',
+    'Commercial Architects',
+    'Industrial Architecture',
   ],
-  authors: [{ name: 'Minale + Mann' }],
+  authors: [{ name: 'M. A. Wakeel Khan & Associates' }],
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/images/mawk-logo-favicon.png',
+  },
 };
 
 export default function RootLayout({

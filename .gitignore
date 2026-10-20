@@ -60,3 +60,8 @@ Thumbs.db
 # Server Logs
 *.log
 error_log
+
+# Local Raw Design Source Files & Large Media Dumps
+*.cdr.zip
+*.cdr/
+Logo and Other Images/
