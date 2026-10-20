@@ -68,13 +68,13 @@ export const QuickContactDrawer: React.FC = () => {
             animate={{ x: '0%' }}
             exit={{ x: '100%' }}
             transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-            className="absolute top-0 right-0 bottom-0 w-full sm:w-[500px] lg:w-[580px] bg-[#1b1b1e] text-white shadow-2xl border-l border-white/10 z-10 flex flex-col p-8 sm:p-12 overflow-y-auto"
+            className="absolute top-0 right-0 bottom-0 w-full sm:w-[500px] lg:w-[580px] bg-[#1b1b1e] text-white shadow-2xl border-l border-white/10 z-10 flex flex-col p-6 sm:p-12 overflow-y-auto"
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-8">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-400 block mb-1">
-                  Minale + Mann
+                  M. A. Wakeel Khan & Associates
                 </span>
                 <h3 className="text-xl sm:text-2xl font-light uppercase tracking-tight text-white">
                   Get in Touch
@@ -84,7 +84,7 @@ export const QuickContactDrawer: React.FC = () => {
               <button
                 type="button"
                 onClick={closeQuickContact}
-                className="p-2 text-neutral-400 hover:text-white transition-colors focus:outline-none"
+                className="p-2 text-neutral-400 hover:text-white transition-colors focus:outline-none cursor-pointer"
                 aria-label="Close Inquiry Drawer"
               >
                 <X className="w-5 h-5" />
@@ -94,22 +94,15 @@ export const QuickContactDrawer: React.FC = () => {
             {/* Studio Coordinates */}
             <div className="space-y-4 mb-8 text-neutral-300 font-light text-xs sm:text-sm leading-relaxed border-b border-white/10 pb-8">
               <p>
-                <strong className="text-white font-normal block mb-1">London Headquarters</strong>
-                Archway 69, 324 Queenstown Road<br />
-                Battersea, London SW8 4LT
+                <strong className="text-white font-normal block mb-1">Dhaka Studio</strong>
+                Dhaka, Bangladesh
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-2 text-xs font-mono tracking-wider">
                 <a
-                  href="mailto:generalenquiries@minaleandmann.com"
+                  href="mailto:info@mawk.com.bd"
                   className="hover:text-white underline underline-offset-4 decoration-white/30"
                 >
-                  generalenquiries@minaleandmann.com
-                </a>
-                <a
-                  href="tel:02039586074"
-                  className="hover:text-white underline underline-offset-4 decoration-white/30"
-                >
-                  020 3958 6074
+                  info@mawk.com.bd
                 </a>
               </div>
             </div>

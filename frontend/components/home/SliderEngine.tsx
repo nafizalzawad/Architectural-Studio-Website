@@ -118,7 +118,11 @@ export const SliderEngine: React.FC = () => {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hasInteractedRef = useRef<boolean>(false);
 
-  // Responsive screen size detection for exact scale matching
+  // Touch gesture coordinates
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  // Responsive screen size detection
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -154,6 +158,29 @@ export const SliderEngine: React.FC = () => {
     setActiveSlideIndex(prevIdx);
   }, [activeSlideIndex, setActiveSlideIndex, silenceInactiveVideos, totalSlides]);
 
+  // Touch Swipe Handlers for mobile ergonomics
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+
+    // Minimum swipe threshold (45px) with horizontal bias
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      if (deltaX < 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   // Synchronized Video & Sound Management
   useEffect(() => {
     // 1. Strictly pause and mute all inactive videos
@@ -170,7 +197,7 @@ export const SliderEngine: React.FC = () => {
         const playPromise = activeVid.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
-            // Fallback for browsers requiring gesture:
+            // Fallback for browsers requiring initial user interaction
             activeVid.muted = true;
             activeVid.volume = 0;
             activeVid.play().catch(() => {});
@@ -213,7 +240,7 @@ export const SliderEngine: React.FC = () => {
     };
   }, [activeSlideIndex, isSoundMuted, isOverviewMode]);
 
-  // Watchdog timer: If a video takes longer than 9.0s or stalls, advance to next slide
+  // Watchdog timer: If a video takes longer than 9.0s or ends, safely advance
   useEffect(() => {
     if (isOverviewMode) return;
 
@@ -274,13 +301,15 @@ export const SliderEngine: React.FC = () => {
   };
 
   const current = slidesData[activeSlideIndex];
-  const targetScale = isOverviewMode ? (isMobile ? 0.52 : 0.42) : 1;
+  const targetScale = isOverviewMode ? (isMobile ? 0.6 : 0.42) : 1;
 
   return (
     <div
       id="sliderNav"
       onWheel={handleWheel}
-      className="relative w-full h-screen overflow-hidden bg-[#141416] text-white select-none"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="relative w-full h-[100dvh] overflow-hidden bg-[#141416] text-white select-none touch-pan-y"
     >
       {/* ================= 1. SECTION WRAP (Category indicator above active slide) ================= */}
       <motion.div
@@ -290,11 +319,11 @@ export const SliderEngine: React.FC = () => {
           y: isOverviewMode ? 0 : -15,
         }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-12 sm:top-14 md:top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+        className="absolute top-10 sm:top-14 md:top-16 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
       >
-        <div className="flex items-center gap-3">
-          <span className="h-4 sm:h-5 w-[1.5px] bg-white/70 inline-block" />
-          <span className="text-[11px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white font-medium">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <span className="h-3.5 sm:h-5 w-[1.5px] bg-white/70 inline-block" />
+          <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] sm:tracking-[0.25em] text-white font-medium">
             {current.section}
           </span>
         </div>
@@ -312,7 +341,7 @@ export const SliderEngine: React.FC = () => {
           ease: [0.76, 0, 0.24, 1], // Smooth Cubic.easeInOut
         }}
         style={{
-          transformOrigin: '50vw 45vh',
+          transformOrigin: isMobile ? '50vw 42vh' : '50vw 45vh',
         }}
       >
         {/* Continuous Horizontal Slides Track */}
@@ -333,7 +362,7 @@ export const SliderEngine: React.FC = () => {
               <div
                 key={slide.id}
                 onClick={() => handleSlideCardClick(idx)}
-                className={`w-[100vw] h-[100vh] shrink-0 relative flex flex-col justify-center items-center transition-all duration-500 ${
+                className={`w-[100vw] h-[100dvh] shrink-0 relative flex flex-col justify-center items-center transition-all duration-500 ${
                   isOverviewMode ? 'cursor-pointer group' : ''
                 }`}
               >
@@ -366,14 +395,14 @@ export const SliderEngine: React.FC = () => {
                     />
                   </div>
 
-                  {/* Subtle darkening for editorial contrast */}
+                  {/* Editorial Contrast Gradient Overlay (Deepens on mobile for crisp text readability) */}
                   <div
                     className={`absolute inset-0 transition-colors duration-500 pointer-events-none ${
                       isOverviewMode
                         ? isSelected
                           ? 'bg-black/10'
                           : 'bg-black/40 group-hover:bg-black/15'
-                        : 'bg-gradient-to-t from-black/60 via-transparent to-black/30'
+                        : 'bg-gradient-to-t from-black/85 via-black/30 to-black/35 sm:from-black/60 sm:via-transparent sm:to-black/30'
                     }`}
                   />
                 </div>
@@ -386,12 +415,12 @@ export const SliderEngine: React.FC = () => {
                     y: isOverviewMode ? 0 : 20,
                   }}
                   transition={{ duration: 0.45, ease: 'easeOut' }}
-                  className="absolute -bottom-24 sm:-bottom-28 w-full text-center pointer-events-none select-none px-4"
+                  className="absolute -bottom-20 sm:-bottom-28 w-full text-center pointer-events-none select-none px-2 sm:px-4"
                 >
-                  <p className="text-sm sm:text-base font-light uppercase tracking-[0.25em] text-white">
+                  <p className="text-xs sm:text-base font-light uppercase tracking-[0.2em] sm:tracking-[0.25em] text-white truncate max-w-[280px] sm:max-w-none mx-auto">
                     {slide.heading}
                   </p>
-                  <span className="text-[10px] sm:text-xs font-light uppercase tracking-[0.25em] text-white/50 mt-1 block">
+                  <span className="text-[9px] sm:text-xs font-light uppercase tracking-[0.2em] sm:tracking-[0.25em] text-white/50 mt-0.5 sm:mt-1 block truncate max-w-[260px] sm:max-w-none mx-auto">
                     {slide.subtitle}
                   </span>
                 </motion.div>
@@ -401,48 +430,48 @@ export const SliderEngine: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* ================= 3. CAPTIONS HUD (Overlay bottom-left, visible in full mode) ================= */}
+      {/* ================= 3. CAPTIONS HUD (Overlay bottom-left, responsive across all viewports) ================= */}
       <AnimatePresence>
         {!isOverviewMode && (
           <motion.div
             key={`caption-${current.id}`}
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10, transition: { duration: 0.25 } }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-16 sm:bottom-20 lg:bottom-24 left-8 sm:left-14 lg:left-20 z-20 max-w-3xl pointer-events-none pr-8"
+            className="absolute bottom-10 sm:bottom-16 md:bottom-20 lg:bottom-24 left-5 sm:left-10 lg:left-20 right-5 sm:right-auto z-20 max-w-3xl pointer-events-none"
           >
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-2.5 sm:space-y-4">
               {/* Top Subtitle Badge */}
-              <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-white">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-[9px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.16em] text-white">
                   {current.subtitle}
                 </span>
-                <span className="h-3 w-[1px] bg-white/40" />
-                <span className="text-[10px] sm:text-[11px] font-light uppercase tracking-[0.16em] text-white/70">
+                <span className="h-2.5 sm:h-3 w-[1px] bg-white/40" />
+                <span className="text-[9px] sm:text-[11px] font-light uppercase tracking-[0.14em] sm:tracking-[0.16em] text-white/70">
                   {current.seoTitle}
                 </span>
               </div>
 
-              {/* Main Editorial Heading */}
-              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] font-light uppercase tracking-tight text-white leading-none">
+              {/* Main Editorial Heading: Fully Fluid & Responsive */}
+              <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5rem] font-light uppercase tracking-tight text-white leading-[1.08] sm:leading-none break-words">
                 {current.heading}
               </h1>
 
               {/* Narrative Paragraph */}
-              <p className="text-xs sm:text-sm md:text-[15px] text-white/90 font-light leading-relaxed max-w-xl pt-1 uppercase">
+              <p className="text-[11px] sm:text-sm md:text-[15px] text-white/90 font-light leading-relaxed max-w-xl pt-0.5 sm:pt-1 uppercase line-clamp-3 sm:line-clamp-none">
                 {current.description}
               </p>
 
               {/* Ghost CTA Button */}
               {!current.noCta && current.ctaText && current.ctaLink && (
-                <div className="pt-2 pointer-events-auto">
+                <div className="pt-1 sm:pt-2 pointer-events-auto">
                   <Link
                     href={current.ctaLink}
-                    className="group inline-flex items-center gap-2.5 text-[11px] uppercase font-mono tracking-[0.25em] px-5 py-2.5 border border-white/50 bg-black/40 backdrop-blur-sm hover:bg-white hover:text-[#1b1b1e] transition-all duration-300"
+                    className="group inline-flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-[11px] uppercase font-mono tracking-[0.2em] sm:tracking-[0.25em] px-4 sm:px-5 py-2 sm:py-2.5 border border-white/50 bg-black/50 backdrop-blur-sm hover:bg-white hover:text-[#1b1b1e] active:scale-95 transition-all duration-300"
                   >
                     <span>{current.ctaText}</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <ArrowUpRight className="w-3 sm:w-3.5 h-3 sm:h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </Link>
                 </div>
               )}
@@ -451,13 +480,13 @@ export const SliderEngine: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Ambient Sound Controller (Bottom-Right HUD) */}
+      {/* Floating Ambient Sound Controller (Desktop HUD Pill, hidden on mobile where header sound button handles audio) */}
       {!isOverviewMode && (
-        <div className="absolute bottom-16 sm:bottom-20 lg:bottom-24 right-8 sm:right-14 lg:right-20 z-20 pointer-events-auto">
+        <div className="hidden sm:flex absolute bottom-16 md:bottom-20 lg:bottom-24 right-8 sm:right-10 lg:right-20 z-20 pointer-events-auto">
           <button
             type="button"
             onClick={toggleSound}
-            className="flex items-center gap-2.5 px-4 py-2 border border-white/30 bg-black/40 backdrop-blur-md rounded-full text-white/80 hover:text-white hover:border-white transition-all duration-300 cursor-pointer shadow-lg hover:scale-105"
+            className="flex items-center gap-2.5 px-4 py-2 border border-white/30 bg-black/40 backdrop-blur-md rounded-full text-white/80 hover:text-white hover:border-white transition-all duration-300 cursor-pointer shadow-lg hover:scale-105 active:scale-95"
             title={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
             aria-label={isSoundMuted ? 'Turn Sound ON' : 'Turn Sound OFF'}
           >
@@ -482,7 +511,7 @@ export const SliderEngine: React.FC = () => {
           pointerEvents: isOverviewMode ? 'auto' : 'none',
         }}
         transition={{ duration: 0.45 }}
-        className="absolute bottom-10 sm:bottom-14 left-0 right-0 px-8 sm:px-16 lg:px-28 z-30 flex flex-col items-center gap-3"
+        className="absolute bottom-6 sm:bottom-10 lg:bottom-14 left-0 right-0 px-5 sm:px-16 lg:px-28 z-30 flex flex-col items-center gap-2.5 sm:gap-3"
       >
         {/* Scrubber Track */}
         <div
@@ -504,21 +533,21 @@ export const SliderEngine: React.FC = () => {
         </div>
 
         {/* Informational Subline */}
-        <div className="flex items-center justify-between w-full text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-white/50">
+        <div className="flex items-center justify-between w-full text-[9px] sm:text-xs font-mono uppercase tracking-[0.18em] sm:tracking-[0.25em] text-white/50">
           <span>
             {String(activeSlideIndex + 1).padStart(2, '0')} / {String(totalSlides).padStart(2, '0')}
           </span>
           <span className="hidden sm:inline">Click project or toggle [ ] to enter</span>
-          <span className="truncate max-w-[150px] sm:max-w-none">{current.heading}</span>
+          <span className="truncate max-w-[120px] sm:max-w-none">{current.heading}</span>
         </div>
       </motion.div>
 
-      {/* ================= 5. INTERACTIVE EDGE HIT-AREAS & ARROWS ================= */}
+      {/* ================= 5. INTERACTIVE EDGE HIT-AREAS & ARROWS (Desktop only; Mobile uses intuitive touch swipes) ================= */}
       {/* Left Hit-Area */}
       <button
         type="button"
         onClick={prevSlide}
-        className={`absolute left-0 top-0 bottom-0 z-20 focus:outline-none flex items-center transition-all ${
+        className={`hidden md:flex absolute left-0 top-0 bottom-0 z-20 focus:outline-none items-center transition-all ${
           isOverviewMode
             ? 'w-16 sm:w-24 px-4 hover:bg-black/10'
             : 'w-20 sm:w-28 px-6 sm:px-10 group'
@@ -540,7 +569,7 @@ export const SliderEngine: React.FC = () => {
       <button
         type="button"
         onClick={nextSlide}
-        className={`absolute right-0 top-0 bottom-0 z-20 focus:outline-none flex items-center justify-end transition-all ${
+        className={`hidden md:flex absolute right-0 top-0 bottom-0 z-20 focus:outline-none items-center justify-end transition-all ${
           isOverviewMode
             ? 'w-16 sm:w-24 px-4 hover:bg-black/10'
             : 'w-20 sm:w-28 px-6 sm:px-10 group'
