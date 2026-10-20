@@ -99,6 +99,8 @@ export const slidesData: SlideItem[] = [
   },
 ];
 
+const SLIDE_DURATION_SECONDS = 8.0;
+
 export const SliderEngine: React.FC = () => {
   const {
     isOverviewMode,
@@ -110,7 +112,6 @@ export const SliderEngine: React.FC = () => {
   } = useNavigation();
 
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [videoProgress, setVideoProgress] = useState<number>(0);
   const totalSlides = slidesData.length;
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const wheelLockRef = useRef<number>(0);
@@ -144,14 +145,12 @@ export const SliderEngine: React.FC = () => {
   const nextSlide = useCallback(() => {
     const nextIdx = (activeSlideIndex + 1) % totalSlides;
     silenceInactiveVideos(nextIdx);
-    setVideoProgress(0);
     setActiveSlideIndex(nextIdx);
   }, [activeSlideIndex, setActiveSlideIndex, silenceInactiveVideos, totalSlides]);
 
   const prevSlide = useCallback(() => {
     const prevIdx = (activeSlideIndex - 1 + totalSlides) % totalSlides;
     silenceInactiveVideos(prevIdx);
-    setVideoProgress(0);
     setActiveSlideIndex(prevIdx);
   }, [activeSlideIndex, setActiveSlideIndex, silenceInactiveVideos, totalSlides]);
 
@@ -171,7 +170,7 @@ export const SliderEngine: React.FC = () => {
         const playPromise = activeVid.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
-            // If browser autoplay policy blocked unmuted sound (before first user interaction):
+            // Fallback for browsers requiring gesture:
             activeVid.muted = true;
             activeVid.volume = 0;
             activeVid.play().catch(() => {});
@@ -214,13 +213,13 @@ export const SliderEngine: React.FC = () => {
     };
   }, [activeSlideIndex, isSoundMuted, isOverviewMode]);
 
-  // Watchdog timer: If a video takes longer than 9.5s or ends, safely advance to next slide
+  // Watchdog timer: If a video takes longer than 9.0s or stalls, advance to next slide
   useEffect(() => {
     if (isOverviewMode) return;
 
     const watchdog = setTimeout(() => {
       nextSlide();
-    }, 9500);
+    }, 9000);
 
     return () => clearTimeout(watchdog);
   }, [activeSlideIndex, isOverviewMode, nextSlide]);
@@ -271,7 +270,6 @@ export const SliderEngine: React.FC = () => {
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     const targetIdx = Math.min(totalSlides - 1, Math.floor(ratio * totalSlides));
     silenceInactiveVideos(targetIdx);
-    setVideoProgress(0);
     setActiveSlideIndex(targetIdx);
   };
 
@@ -330,6 +328,7 @@ export const SliderEngine: React.FC = () => {
         >
           {slidesData.map((slide, idx) => {
             const isSelected = idx === activeSlideIndex;
+            const isNext = idx === (activeSlideIndex + 1) % totalSlides;
             return (
               <div
                 key={slide.id}
@@ -357,18 +356,10 @@ export const SliderEngine: React.FC = () => {
                       poster={slide.posterUrl}
                       playsInline
                       muted={idx !== activeSlideIndex || isOverviewMode || isSoundMuted}
-                      preload={idx === 0 || idx === activeSlideIndex ? 'auto' : 'metadata'}
+                      preload={isSelected || isNext ? 'auto' : 'none'}
                       onEnded={() => {
                         if (idx === activeSlideIndex && !isOverviewMode) {
                           nextSlide();
-                        }
-                      }}
-                      onTimeUpdate={(e) => {
-                        if (idx === activeSlideIndex) {
-                          const v = e.currentTarget;
-                          if (v.duration > 0) {
-                            setVideoProgress((v.currentTime / v.duration) * 100);
-                          }
                         }
                       }}
                       className="w-full h-full object-cover object-center filter contrast-[1.03]"
@@ -567,12 +558,19 @@ export const SliderEngine: React.FC = () => {
         </span>
       </button>
 
-      {/* ================= 6. REAL-TIME VIDEO PLAYBACK PROGRESS BAR ================= */}
+      {/* ================= 6. SILKY SMOOTH GPU-ACCELERATED PROGRESS BAR ================= */}
       {!isOverviewMode && (
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-20 pointer-events-none">
-          <div
-            className="h-full bg-white/80 transition-all duration-150 ease-linear"
-            style={{ width: `${videoProgress}%` }}
+        <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/10 z-20 pointer-events-none overflow-hidden">
+          <motion.div
+            key={`progress-bar-${activeSlideIndex}`}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{
+              duration: SLIDE_DURATION_SECONDS,
+              ease: 'linear',
+            }}
+            style={{ transformOrigin: '0% 50%' }}
+            className="w-full h-full bg-white/80 will-change-transform"
           />
         </div>
       )}
