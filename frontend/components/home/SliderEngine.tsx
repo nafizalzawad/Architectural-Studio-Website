@@ -99,8 +99,6 @@ export const slidesData: SlideItem[] = [
   },
 ];
 
-const AUTOPLAY_INTERVAL_MS = 8000; // 8 seconds per slide matching video duration
-
 export const SliderEngine: React.FC = () => {
   const {
     isOverviewMode,
@@ -111,12 +109,13 @@ export const SliderEngine: React.FC = () => {
     toggleSound,
   } = useNavigation();
 
-  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [videoProgress, setVideoProgress] = useState<number>(0);
   const totalSlides = slidesData.length;
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const wheelLockRef = useRef<number>(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const hasInteractedRef = useRef<boolean>(false);
 
   // Responsive screen size detection for exact scale matching
   useEffect(() => {
@@ -128,77 +127,103 @@ export const SliderEngine: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Navigate functions
+  // Forcefully stop and silence all inactive video elements in the DOM
+  const silenceInactiveVideos = useCallback((targetIndex: number) => {
+    const allVideos = document.querySelectorAll<HTMLVideoElement>('#sliderNav video');
+    allVideos.forEach((vid, i) => {
+      if (i !== targetIndex) {
+        vid.pause();
+        vid.muted = true;
+        vid.volume = 0;
+        vid.currentTime = 0;
+      }
+    });
+  }, []);
+
+  // Navigate functions with instant audio cutoff on outgoing slide
   const nextSlide = useCallback(() => {
-    setActiveSlideIndex((activeSlideIndex + 1) % totalSlides);
-  }, [activeSlideIndex, setActiveSlideIndex, totalSlides]);
+    const nextIdx = (activeSlideIndex + 1) % totalSlides;
+    silenceInactiveVideos(nextIdx);
+    setVideoProgress(0);
+    setActiveSlideIndex(nextIdx);
+  }, [activeSlideIndex, setActiveSlideIndex, silenceInactiveVideos, totalSlides]);
 
   const prevSlide = useCallback(() => {
-    setActiveSlideIndex((activeSlideIndex - 1 + totalSlides) % totalSlides);
-  }, [activeSlideIndex, setActiveSlideIndex, totalSlides]);
-
-  // Autoplay countdown timer
-  useEffect(() => {
-    if (isOverviewMode || isPaused) return;
-
-    const timer = setInterval(() => {
-      nextSlide();
-    }, AUTOPLAY_INTERVAL_MS);
-
-    return () => clearInterval(timer);
-  }, [nextSlide, isOverviewMode, isPaused]);
+    const prevIdx = (activeSlideIndex - 1 + totalSlides) % totalSlides;
+    silenceInactiveVideos(prevIdx);
+    setVideoProgress(0);
+    setActiveSlideIndex(prevIdx);
+  }, [activeSlideIndex, setActiveSlideIndex, silenceInactiveVideos, totalSlides]);
 
   // Synchronized Video & Sound Management
   useEffect(() => {
-    videoRefs.current.forEach((video, idx) => {
-      if (!video) return;
+    // 1. Strictly pause and mute all inactive videos
+    silenceInactiveVideos(activeSlideIndex);
 
-      if (idx === activeSlideIndex && !isOverviewMode) {
-        // Active slide in full view mode
-        video.muted = isSoundMuted;
-        video.volume = 1.0;
+    // 2. Control active video
+    if (!isOverviewMode) {
+      const activeVid = videoRefs.current[activeSlideIndex];
+      if (activeVid) {
+        activeVid.currentTime = 0;
+        activeVid.muted = isSoundMuted;
+        activeVid.volume = isSoundMuted ? 0 : 1.0;
 
-        const playPromise = video.play();
+        const playPromise = activeVid.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
-            // If browser blocked unmuted autoplay, fall back to muted autoplay
-            if (!video.muted) {
-              video.muted = true;
-              video.play().catch(() => {});
-            }
+            // If browser autoplay policy blocked unmuted sound (before first user interaction):
+            activeVid.muted = true;
+            activeVid.volume = 0;
+            activeVid.play().catch(() => {});
           });
         }
-      } else {
-        // Inactive slide or in overview mode
-        video.pause();
-        video.muted = true;
-        if (!isOverviewMode) {
-          video.currentTime = 0;
-        }
       }
-    });
-  }, [activeSlideIndex, isOverviewMode, isSoundMuted]);
+    } else {
+      // In overview mode, pause everything
+      const activeVid = videoRefs.current[activeSlideIndex];
+      if (activeVid) {
+        activeVid.pause();
+        activeVid.muted = true;
+        activeVid.volume = 0;
+      }
+    }
+  }, [activeSlideIndex, isOverviewMode, isSoundMuted, silenceInactiveVideos]);
 
-  // First interaction listener to unlock unmuted audio if initially restricted
+  // Unlock audio policy on first user gesture (click, tap, keydown)
   useEffect(() => {
-    const unlockAudio = () => {
-      const activeVideo = videoRefs.current[activeSlideIndex];
-      if (activeVideo && !isSoundMuted && !isOverviewMode) {
-        activeVideo.muted = false;
-        activeVideo.play().catch(() => {});
+    const unlockAudioOnGesture = () => {
+      if (hasInteractedRef.current) return;
+      hasInteractedRef.current = true;
+
+      const activeVid = videoRefs.current[activeSlideIndex];
+      if (activeVid && !isSoundMuted && !isOverviewMode) {
+        activeVid.muted = false;
+        activeVid.volume = 1.0;
+        activeVid.play().catch(() => {});
       }
     };
 
-    window.addEventListener('click', unlockAudio, { once: true });
-    window.addEventListener('keydown', unlockAudio, { once: true });
-    window.addEventListener('touchstart', unlockAudio, { once: true });
+    window.addEventListener('click', unlockAudioOnGesture, { once: true });
+    window.addEventListener('touchstart', unlockAudioOnGesture, { once: true });
+    window.addEventListener('keydown', unlockAudioOnGesture, { once: true });
 
     return () => {
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('keydown', unlockAudio);
-      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudioOnGesture);
+      window.removeEventListener('touchstart', unlockAudioOnGesture);
+      window.removeEventListener('keydown', unlockAudioOnGesture);
     };
   }, [activeSlideIndex, isSoundMuted, isOverviewMode]);
+
+  // Watchdog timer: If a video takes longer than 9.5s or ends, safely advance to next slide
+  useEffect(() => {
+    if (isOverviewMode) return;
+
+    const watchdog = setTimeout(() => {
+      nextSlide();
+    }, 9500);
+
+    return () => clearTimeout(watchdog);
+  }, [activeSlideIndex, isOverviewMode, nextSlide]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -232,6 +257,7 @@ export const SliderEngine: React.FC = () => {
   // Click on slide in overview mode: selects and smoothly zooms in
   const handleSlideCardClick = (idx: number) => {
     if (isOverviewMode) {
+      silenceInactiveVideos(idx);
       setActiveSlideIndex(idx);
       setOverviewMode(false);
     }
@@ -243,8 +269,10 @@ export const SliderEngine: React.FC = () => {
     const rect = progressTrackRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetIdx = Math.floor(ratio * totalSlides);
-    setActiveSlideIndex(Math.min(totalSlides - 1, targetIdx));
+    const targetIdx = Math.min(totalSlides - 1, Math.floor(ratio * totalSlides));
+    silenceInactiveVideos(targetIdx);
+    setVideoProgress(0);
+    setActiveSlideIndex(targetIdx);
   };
 
   const current = slidesData[activeSlideIndex];
@@ -254,8 +282,6 @@ export const SliderEngine: React.FC = () => {
     <div
       id="sliderNav"
       onWheel={handleWheel}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
       className="relative w-full h-screen overflow-hidden bg-[#141416] text-white select-none"
     >
       {/* ================= 1. SECTION WRAP (Category indicator above active slide) ================= */}
@@ -330,9 +356,21 @@ export const SliderEngine: React.FC = () => {
                       src={slide.videoUrl}
                       poster={slide.posterUrl}
                       playsInline
-                      loop
-                      muted={isSoundMuted || isOverviewMode || !isSelected}
+                      muted={idx !== activeSlideIndex || isOverviewMode || isSoundMuted}
                       preload={idx === 0 || idx === activeSlideIndex ? 'auto' : 'metadata'}
+                      onEnded={() => {
+                        if (idx === activeSlideIndex && !isOverviewMode) {
+                          nextSlide();
+                        }
+                      }}
+                      onTimeUpdate={(e) => {
+                        if (idx === activeSlideIndex) {
+                          const v = e.currentTarget;
+                          if (v.duration > 0) {
+                            setVideoProgress((v.currentTime / v.duration) * 100);
+                          }
+                        }
+                      }}
                       className="w-full h-full object-cover object-center filter contrast-[1.03]"
                     />
                   </div>
@@ -529,18 +567,12 @@ export const SliderEngine: React.FC = () => {
         </span>
       </button>
 
-      {/* ================= 6. SUBTLE AUTOPLAY TIMER LINE AT BOTTOM ================= */}
+      {/* ================= 6. REAL-TIME VIDEO PLAYBACK PROGRESS BAR ================= */}
       {!isOverviewMode && (
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-20 pointer-events-none">
-          <motion.div
-            key={`${current.id}-${activeSlideIndex}`}
-            initial={{ width: '0%' }}
-            animate={{ width: isPaused ? undefined : '100%' }}
-            transition={{
-              duration: AUTOPLAY_INTERVAL_MS / 1000,
-              ease: 'linear',
-            }}
-            className="h-full bg-white/70"
+          <div
+            className="h-full bg-white/80 transition-all duration-150 ease-linear"
+            style={{ width: `${videoProgress}%` }}
           />
         </div>
       )}
